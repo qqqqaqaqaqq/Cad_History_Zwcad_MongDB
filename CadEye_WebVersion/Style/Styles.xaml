@@ -1,0 +1,282 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- WhiteMode -->
+    <Style x:Key="WhiteMode" TargetType="Border">
+        <Setter Property="Background" Value="#80FFFFFF"/>
+        <Setter Property="BorderBrush" Value="White"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    
+    <Style x:Key="BlackForegroundText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="Black"/>
+    </Style>
+
+    <!-- 은은한 보라빛 -->
+    <Style x:Key="DarkMode" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"/>
+    </Style>
+
+    <Style x:Key="WhiteForegroundText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style x:Key="CurrentModeBorder" TargetType="Border" BasedOn="{StaticResource DarkMode}"/>
+
+    <!-- ICON -->
+    <Style x:Key="IconButtonBase" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Foreground" Value="Black"/>
+
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter 
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="1.1" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="1.1" Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetProperty="(Button.Foreground).(SolidColorBrush.Color)"
+                                        To="Orange" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="1" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="1" Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetProperty="(Button.Foreground).(SolidColorBrush.Color)"
+                                        To="Black" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- TextButtonBase -->
+    <Style x:Key="TextButtonBase" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter 
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="1.05" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="1.05" Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetProperty="(Button.Foreground).(SolidColorBrush.Color)"
+                                        To="Orange" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                         To="1" Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                         To="1" Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetProperty="(Button.Foreground).(SolidColorBrush.Color)"
+                                        To="Black" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SwitchViewRadio" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="Segoe UI Black"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0,0,0,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+            <!-- 마우스 오버 -->
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="Orange"/>
+            </Trigger>
+
+            <!-- 선택 상태 -->
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="BorderBrush" Value="White"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="Background" Value="White"/>
+                <!-- 선택 시 배경 흰색 -->
+            </Trigger>
+
+            <!-- 선택되지 않음 -->
+            <Trigger Property="IsChecked" Value="False">
+                <Setter Property="Background" Value="Transparent"/>
+                <!-- 선택 안 되면 투명 -->
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+
+
+
+    <!-- GearIconStyle -->
+    <Style x:Key="GearIconStyle" TargetType="Button" BasedOn="{StaticResource IconButtonBase}">
+        <Setter Property="Content" Value="&#xE713;"/>
+    </Style>
+
+    <!-- FolderIconStyle -->
+    <Style x:Key="FolderIconStyle" TargetType="Button" BasedOn="{StaticResource IconButtonBase}">
+        <Setter Property="Content" Value="&#xE8B7;"/>
+    </Style>
+
+    <!-- TextBlock -->
+    <Style x:Key="TextBlockBase" TargetType="TextBlock">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="TreeStyle" TargetType="TreeView">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <!-- TreeBorder -->
+    <Style x:Key="TreeBorderStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="#FFAAAAAA"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Margin" Value="10"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+    </Style>
+
+    <!-- Data-Grid-->
+    <Style x:Key="Data_Gaid_Background" TargetType="DataGrid">
+        <Setter Property="Background" Value="#1C1C1C"/>
+        <Setter Property="BorderBrush" Value="#333333"/>
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="BorderThickness" Value="0,1,0,1"/>
+        <Setter Property="SelectionMode" Value="Extended"/>
+        <Setter Property="CanUserAddRows" Value="False"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+    </Style>
+
+    <Style x:Key="Data_Grid_ColumnHeader" TargetType="DataGridColumnHeader">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="#1C1C1C"/>
+        <Setter Property="BorderBrush" Value="#333333"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#333333"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Data_Grid_Cell" TargetType="DataGridCell">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="#1C1C1C"/>
+        <Setter Property="BorderBrush" Value="#444444"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="Height" Value="30"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#333333"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Data_ElementStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="5,0,0,0"/>
+    </Style>
+
+</ResourceDictionary>
