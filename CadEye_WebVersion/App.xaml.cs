@@ -1,13 +1,9 @@
 ﻿using CadEye_WebVersion.Services.WindowService;
 using CadEye_WebVersion.Commands;
-using CadEye_WebVersion.Commands.Helpers;
-using CadEye_WebVersion.Services.FileCheck;
-using CadEye_WebVersion.Services.FileSystem;
 using CadEye_WebVersion.Services.FileWatcher.ProjectFolder;
 using CadEye_WebVersion.Services.FileWatcher.Repository;
 using CadEye_WebVersion.Services.FileWatcher.RepositoryPdf;
 using CadEye_WebVersion.Services.FolderService;
-using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.Mongo.Services;
 using CadEye_WebVersion.Services.PDF;
 using CadEye_WebVersion.Services.Zwcad;
@@ -15,10 +11,11 @@ using CadEye_WebVersion.ViewModels;
 using CadEye_WebVersion.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using CadEye_WebVersion.Services.Mongo.Interfaces;
 
 namespace CadEye_WebVersion
 {
-    public partial class App : System.Windows.Application
+    public partial class App : System.Windows.Application   
     {
         public IServiceProvider? ServiceProvider { get; private set; }
 
@@ -44,19 +41,10 @@ namespace CadEye_WebVersion
             services.AddSingleton<IImageEntryService, MongoDBImageEntry>();
             services.AddSingleton<IRefEntryService, MongoDBRefEntry>();
 
-            // -----------------
-            // 헬퍼/커맨드 등록
-            // -----------------
-            services.AddTransient<AsyncCommand>();
-            services.AddTransient(typeof(AsyncCommandT<>));
-            services.AddTransient<RelayCommand>();
-
             // =====================
             // 기타 서비스
             // =====================
             services.AddSingleton<iFolderService, FolderService>();
-            services.AddSingleton<IFileCheckService, FileCheckService>();
-            services.AddSingleton<IFileSystem, FileSystem>();
             services.AddSingleton<IWindowsService, WindowService>();
 
             // =====================
@@ -99,7 +87,9 @@ namespace CadEye_WebVersion
     }
     public static class AppSettings
     {
+        public static string? ProjectPath { get; set; }
         public static string? DatabaseType { get; set; }
         public static string? RepositoryPdfFolder { get; set; }
+        public static string? RepositoryDwgFolder { get; set; }
     }
 }

@@ -4,11 +4,11 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace CadEye_WebVersion.Models
 {
-    public class TreeNode
+    public class FileTreeNode
     {
         [BsonId]
         public ObjectId Id { get; set; }
         public string? Name { get; set; }
-        public ObservableCollection<TreeNode> Children { get; set; } = new ObservableCollection<TreeNode>();
+        public ObservableCollection<FileTreeNode> Children { get; set; } = new ObservableCollection<FileTreeNode>();
     }
 }

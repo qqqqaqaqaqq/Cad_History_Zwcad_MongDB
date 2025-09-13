@@ -205,6 +205,11 @@
         <Setter Property="Content" Value="&#xE8B7;"/>
     </Style>
 
+    <!-- RefreshIconStyle -->
+    <Style x:Key="RefreshIconStyle" TargetType="Button" BasedOn="{StaticResource IconButtonBase}">
+        <Setter Property="Content" Value="&#xE72C;"/>
+    </Style>
+    
     <!-- TextBlock -->
     <Style x:Key="TextBlockBase" TargetType="TextBlock">
         <Setter Property="Background" Value="Transparent"/>

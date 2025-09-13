@@ -1,9 +1,4 @@
-﻿using CadEye_WebVersion.ViewModels;
-using CadEye_WebVersion.ViewModels.Messages;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using System.Windows.Forms.Integration;
-
+﻿using CommunityToolkit.Mvvm.Input;
 
 namespace CadEye_WebVersion.Commands
 {

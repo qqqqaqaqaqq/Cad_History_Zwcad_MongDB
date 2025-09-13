@@ -57,8 +57,8 @@
                             <Button 
                                 x:Name="SettingBtn"
                                 Grid.Column="2"
-                                Style="{StaticResource GearIconStyle}"
-                                Command="{Binding SettingCommand}"/>
+                                Style="{StaticResource RefreshIconStyle}"
+                                Command="{Binding TreeRefreshHandler.TreeRefreshCommand}"/>
                         </Grid>
                     </Grid>
 

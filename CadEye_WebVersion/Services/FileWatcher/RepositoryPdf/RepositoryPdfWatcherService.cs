@@ -1,13 +1,11 @@
-﻿using CadEye_WebVersion.Models.Entity;
-using CadEye_WebVersion.Services.FileSystem;
+﻿using CadEye_WebVersion.Infrastructure.Utils;
+using CadEye_WebVersion.Models.Entity;
 using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.PDF;
 using MongoDB.Bson;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
 {
@@ -16,13 +14,10 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
         private ConcurrentQueue<FileSystemEventArgs> eventQueue_repository = new ConcurrentQueue<FileSystemEventArgs>();
         private readonly IImageEntryService _imageEntryService;
 
-        private IFileSystem _fileSystem;
         public RepositoryPdfWatcherService(
-            IFileSystem fileSystem,
             IImageEntryService imageEntryService,
             IPdfService pdfService)
         {
-            _fileSystem = fileSystem;
             _imageEntryService = imageEntryService;
         }
 
@@ -62,7 +57,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
 
         private async void Repository(FileSystemEventArgs e)
         {
-            _fileSystem.isRead(e.FullPath);
+            bool ReadFile = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100);
 
             string[] parts = Path.GetFileNameWithoutExtension(e.FullPath).Split("_");
             string _id = parts[0];

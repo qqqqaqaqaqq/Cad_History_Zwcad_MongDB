@@ -1,5 +1,5 @@
-﻿using CadEye_WebVersion.Models.Entity;
-using CadEye_WebVersion.Services.FileSystem;
+﻿using CadEye_WebVersion.Infrastructure.Utils;
+using CadEye_WebVersion.Models.Entity;
 using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.Zwcad;
 using MongoDB.Bson;
@@ -18,10 +18,11 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
         private readonly IZwcadService _zwcadService;
 
 
-        private IFileSystem _fileSystem;
-        public RepositoryWatcherService(IFileSystem fileSystem, IEventEntryService eventEntryService, IZwcadService zwcadService, IRefEntryService refEntryService)
+        public RepositoryWatcherService(
+            IEventEntryService eventEntryService, 
+            IZwcadService zwcadService,
+            IRefEntryService refEntryService)
         {
-            _fileSystem = fileSystem;
             _eventEntryService = eventEntryService;
             _zwcadService = zwcadService;
             _refEntryService = refEntryService;
@@ -48,7 +49,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
                     switch (e.ChangeType)
                     {
                         case WatcherChangeTypes.Created:
-                            Repository(e);
+                            await Repository(e);
                             break;
                     }
                     await Task.Delay(100);
@@ -61,24 +62,26 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
         }
 
         private readonly object _lock = new object();
-        private async void Repository(FileSystemEventArgs e)
+        private async Task Repository(FileSystemEventArgs e)
         {
-            _fileSystem.isRead(e.FullPath);
+            bool ReadFile = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100);
 
             string[] parts = Path.GetFileNameWithoutExtension(e.FullPath).Split("_");
             string _id = parts[0];
             string _event = parts[1];
             string _time = parts[2];
+            string _description = parts[3];
+            if (string.IsNullOrEmpty(_description)) _description = "";
 
             ObjectId objectId = ObjectId.Parse(_id);
             DateTime time = DateTime.ParseExact(_time, "yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
 
-            await EventInsert(objectId, time, _event);
+            await EventInsert(objectId, time, _event, _description);
 
             await RefsInsert(objectId, time, e.FullPath);
         }
 
-        public async Task EventInsert(ObjectId objectId, DateTime time, string eventname)
+        public async Task EventInsert(ObjectId objectId, DateTime time, string eventname, string description)
         {
             var child_node = new List<EventList>();
 
@@ -92,7 +95,9 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
             child_node.Add(new EventList()
             {
                 Time = time,
-                EventName = eventname
+                EventName = eventname,
+                EventDescription = description
+
             });
 
             var insert_node = new EventEntry()

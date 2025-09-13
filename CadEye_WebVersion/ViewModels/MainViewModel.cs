@@ -1,7 +1,7 @@
 ﻿using CadEye_WebVersion.Commands;
+using CadEye_WebVersion.Infrastructure.Utils;
 using CadEye_WebVersion.Models.Entity;
-using CadEye_WebVersion.Services.FileCheck;
-using CadEye_WebVersion.Services.FileSystem;
+using CadEye_WebVersion.Services.FileWatcher.ProjectFolder;
 using CadEye_WebVersion.Services.FileWatcher.Repository;
 using CadEye_WebVersion.Services.FileWatcher.RepositoryPdf;
 using CadEye_WebVersion.Services.FolderService;
@@ -9,33 +9,30 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.PDF;
 using CadEye_WebVersion.ViewModels.Messages;
 using CommunityToolkit.Mvvm.Messaging;
+using CadEye_WebVersion.Models;
 using MongoDB.Driver;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace CadEye_WebVersion.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly iFolderService _folderService;
-        private readonly IFileCheckService _fileCheckService;
         public readonly IChildFileService _childFileService;
         public readonly IEventEntryService _eventEntryService;
         public readonly IImageEntryService _imageEntryService;
         public readonly IRefEntryService _refEntryService;
-        public readonly IFileSystem _fileSystem;
+        public readonly IProjectFolderWatcherService _projectFolderWatcherService;
         public readonly IRepositoryPdfWatcherService _pdfWatcherService;
         public readonly IRepositoryWatcherService _dwgWatcherService;
-        private string _projectName = string.Empty;
-        private ObservableCollection<CadEye_WebVersion.Models.TreeNode>? _fileList;
+        private ObservableCollection<Models.FileTreeNode>? _fileList;
         public readonly IPdfService _pdfService;
+        public FileSystemWatcher? _watcher_repository_project;
         public FileSystemWatcher? _watcher_repository_dwg;
         public FileSystemWatcher? _watcher_repository_pdf;
 
@@ -63,17 +60,7 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        public string ProjectName
-        {
-            get => _projectName;
-            set
-            {
-                _projectName = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ObservableCollection<CadEye_WebVersion.Models.TreeNode>? FileList
+        public ObservableCollection<Models.FileTreeNode>? FileList
         {
             get => _fileList;
             set
@@ -83,8 +70,8 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        private CadEye_WebVersion.Models.TreeNode? _selectedTreeNode;
-        public CadEye_WebVersion.Models.TreeNode? SelectedTreeNode
+        private Models.FileTreeNode? _selectedTreeNode;
+        public Models.FileTreeNode? SelectedTreeNode
         {
             get => _selectedTreeNode;
             set
@@ -107,32 +94,39 @@ namespace CadEye_WebVersion.ViewModels
 
         public MainViewModel(
             iFolderService folderService,
-            IFileCheckService fileCheckService,
             IChildFileService childFileService,
             IEventEntryService eventEntryService,
             IImageEntryService imageEntryService,
             IRefEntryService refEntryService,
             IPdfService pdfService,
-            IFileSystem fileSystem,
             IRepositoryPdfWatcherService fileWatcherService,
-            IRepositoryWatcherService dwgWatcherService
+            IRepositoryWatcherService dwgWatcherService,
+            IProjectFolderWatcherService projectFolderWatcherService
             )
         {
             FolderSelecter = new FolderSelect(folderService, OnFolderSelected);
+            TreeRefreshHandler = new TreeRefresh(childFileService);
             _folderService = folderService;
-            _fileCheckService = fileCheckService;
             _childFileService = childFileService;
             _eventEntryService = eventEntryService;
             _imageEntryService = imageEntryService;
             _refEntryService = refEntryService;
             _pdfService = pdfService;
-            _fileSystem = fileSystem;
             _pdfWatcherService = fileWatcherService;
             _dwgWatcherService = dwgWatcherService;
+            _projectFolderWatcherService = projectFolderWatcherService;
 
             WeakReferenceMessenger.Default.Register<SendStatusMessage>(this, async (r, m) =>
             {
                 await SatatusUpdate(m.Value);
+            });
+
+            WeakReferenceMessenger.Default.Register<SendFileTreeNode>(this, async (r, m) =>
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    FileList = new ObservableCollection<FileTreeNode> { m.Value };
+                });
             });
         }
 
@@ -147,12 +141,14 @@ namespace CadEye_WebVersion.ViewModels
         public async void OnFolderSelected(string path)
         {
             StatusMessage = "Start...";
-            await Task.Delay(100);
-            ProjectName = System.IO.Path.GetFileName(path);
-            if (string.IsNullOrEmpty(ProjectName))
+
+            // 프로젝트 네임 셋팅
+            string projectname = System.IO.Path.GetFileName(path);
+            if (string.IsNullOrEmpty(projectname))
                 return;
 
-            string dbName = ProjectName.Trim().Replace(" ", "_").Replace(".", "_");
+            AppSettings.ProjectPath = projectname;
+            string dbName = projectname.Trim().Replace(" ", "_").Replace(".", "_");
 
             if (string.IsNullOrEmpty(dbName))
             {
@@ -163,7 +159,7 @@ namespace CadEye_WebVersion.ViewModels
 
             StatusMessage = "Project Name Completed";
 
-
+            // Mongo collection 셋팅
             var client = new MongoClient("mongodb://localhost:27017");
             var database = client.GetDatabase(dbName);
 
@@ -173,18 +169,25 @@ namespace CadEye_WebVersion.ViewModels
             _refEntryService.Init(dbName);
 
             StatusMessage = "Mongo Set Completed";
-            await Task.Delay(100);
 
-            ConcurrentBag<ChildFile> file_list = new ConcurrentBag<ChildFile>();
+            var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
+            var filtered = new List<ChildFile>();
+
+            // 감시 폴더 내 파일 가져오기
             try
             {
-                file_list = await _fileCheckService.AllocateData(path);
+                var file_list = await FileCheck.AllocateData(path);
 
-                if (file_list.Count > 0)
+                var existingFiles = new HashSet<string>(allFiles.Select(x => x.File_FullName));
+
+                filtered = file_list
+                    .Where(f => !existingFiles.Contains(f.File_FullName))
+                    .ToList();
+
+                if (filtered.Count() > 0)
                 {
-                    await _childFileService.AddAllAsync(file_list.ToList());
+                    await _childFileService.AddAllAsync(filtered);
                 }
-
             }
             catch (Exception ex)
             {
@@ -193,8 +196,6 @@ namespace CadEye_WebVersion.ViewModels
                 return;
             }
             StatusMessage = "File Research Completed";
-
-            await Task.Delay(100);
 
             // Repository 폴더 셋팅
             string currentFolder = AppDomain.CurrentDomain.BaseDirectory;
@@ -210,101 +211,78 @@ namespace CadEye_WebVersion.ViewModels
             }
 
             AppSettings.RepositoryPdfFolder = repositoryPdfPath;
-
+            AppSettings.RepositoryDwgFolder = repositoryDwgPath;
 
             // 폴더 존재 여부 체크
-            int retry = 10;
-            bool foldercheck = false;
-            while (retry-- > 0)
-            {
-                try
-                {
-                    Directory.Exists(repositoryPdfPath);
-                    Directory.Exists(repositoryDwgPath);
-                    foldercheck = true;
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    await Task.Delay(100);
-                }
-            }
+            bool RetrySuccess = false;
 
-            if (!foldercheck)
+            RetrySuccess = await RetryProvider.Retry(() => Directory.Exists(repositoryPdfPath), 100, 100);
+            RetrySuccess = await RetryProvider.Retry(() => Directory.Exists(repositoryDwgPath), 100, 100);
+
+            if (!RetrySuccess)
             {
                 StatusMessage = "Folder Setting Failure";
                 return;
             }
-
             StatusMessage = "Folder Setting Completed";
-
 
             // 파일 와처 셋팅 성공 여부 체크
             bool watchercheck = false;
-            watchercheck = StartWatcher(ref _watcher_repository_dwg, repositoryDwgPath, "dwg");
 
+            watchercheck = StartWatcher(ref _watcher_repository_project!, path, "project");
             if (!watchercheck)
             {
-                StatusMessage = "Folder Monitoring Setting Failure";
+                StatusMessage = "ProjectFolder Monitoring Failure";
                 return;
             }
+            StatusMessage = "ProjectFolder Monitoring Completed";
 
-            watchercheck = StartWatcher(ref _watcher_repository_pdf, repositoryPdfPath, "pdf");
-
+            watchercheck = StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath, "dwg");
             if (!watchercheck)
             {
-                StatusMessage = "Folder Monitoring Setting Failure";
+                StatusMessage = "Repository folder Monitoring Failure";
                 return;
             }
+            StatusMessage = "Repository folder Monitoring  Completed";
 
-            StatusMessage = "Folder Monitoring Setting Completed";
-
-
-            var allFiles = await _childFileService.FindAllAsync();
-
-            if (file_list.Count > 0)
+            watchercheck = StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath, "pdf");
+            if (!watchercheck)
             {
-                foreach (var file in allFiles)
+                StatusMessage = "Repository Pdf Folder Monitoring Failure";
+                return;
+            }
+            StatusMessage = "Repository Pdf Folder Monitoring Completed";
+
+            // 파일 복사
+            allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
+            if (filtered.Count() > 0)
+            {
+                var task = filtered.Select(async file =>
                 {
-                    try
-                    {
-                        if (string.IsNullOrEmpty(repositoryDwgPath)) { return; }
-                        string target = System.IO.Path.Combine(repositoryDwgPath, $"{file.Id}_Created_{DateTime.Now:yyyyMMdd-HHmmss}.dwg");
-                        await _fileSystem.FileCopy(file.File_FullName, target);
-                        await Task.Delay(100);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                        StatusMessage = $"{file} Copy Failure";
-                        await Task.Delay(100);
-                    }
-                }
-            }
+                    string target = System.IO.Path.Combine(repositoryDwgPath, $"{file.Id}_Created_{DateTime.Now:yyyyMMdd-HHmmss}_Start.dwg");
+                    bool retrysuccess = await RetryProvider.RetryAsync(() => FileCopyProvider.FileCopy(file.File_FullName, target), 10, 200);
 
+                    if (!retrysuccess)
+                    {
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            StatusMessage = $"{file} Copy Failed";
+                        });
+                    }
+                });
+
+                await Task.WhenAll(task);
+            }
             StatusMessage = "File Repository Copy Completed";
 
-            bool treecreated = TreeNodeCreate(allFiles, path);
-
-            if (!treecreated)
-                StatusMessage = "FileList View Failure";
+            // TreeView 작성
+            allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                FileList = new ObservableCollection<FileTreeNode> { BuildTree.BuildTreeFromFiles(allFiles, path, projectname) };
+            });
 
             StatusMessage = "FileList View Completed";
-        }
-
-        public bool TreeNodeCreate(List<ChildFile> allFiles, string path)
-        {
-            try
-            {
-                FileList = BuildTreeFromFiles(allFiles, path);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                return false;
-            }
         }
 
         public bool StartWatcher(ref FileSystemWatcher _watcher, string path, string folder)
@@ -315,13 +293,15 @@ namespace CadEye_WebVersion.ViewModels
                 {
                     _watcher.EnableRaisingEvents = false;
                     _watcher.Dispose();
-                    _watcher = null;
+                    _watcher = null!;
                 }
                 _watcher = new FileSystemWatcher(path)
                 {
                     IncludeSubdirectories = true,
                     NotifyFilter = NotifyFilters.CreationTime
                                  | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.DirectoryName
                                  | NotifyFilters.LastWrite
                 };
                 _watcher.InternalBufferSize = 64 * 1024;
@@ -334,6 +314,9 @@ namespace CadEye_WebVersion.ViewModels
                     case "pdf":
                         _pdfWatcherService.SetupWatcher_repository(_watcher);
                         break;
+                    case "project":
+                        _projectFolderWatcherService.SetupWatcher_repository(_watcher);
+                        break;
                 }
                 return true;
             }
@@ -344,48 +327,9 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        private ObservableCollection<CadEye_WebVersion.Models.TreeNode> BuildTreeFromFiles(List<ChildFile> files, string projectRootPath)
-        {
-            var root = new CadEye_WebVersion.Models.TreeNode
-            {
-                Name = ProjectName,
-            };
-
-            foreach (var file in files)
-            {
-                string relativePath = System.IO.Path.GetRelativePath(projectRootPath, file.File_FullName);
-
-                var parts = relativePath.Split(
-                    new[] {
-                    System.IO.Path.DirectorySeparatorChar,
-                    System.IO.Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
-
-                var current = root;
-
-                foreach (var part in parts)
-                {
-                    var child = current.Children.FirstOrDefault(c => c.Name == part);
-                    if (child == null)
-                    {
-                        child = new CadEye_WebVersion.Models.TreeNode
-                        {
-                            Name = part
-                        };
-
-                        if (part == parts.Last())
-                        {
-                            child.Id = file.Id;
-                        }
-                        current.Children.Add(child);
-                    }
-                    current = child;
-                }
-            }
-
-            return new ObservableCollection<CadEye_WebVersion.Models.TreeNode> { root };
-        }
 
         public FolderSelect FolderSelecter { get; }
+        public TreeRefresh TreeRefreshHandler { get; }
         public iFolderService FolderService => _folderService;
 
         public event PropertyChangedEventHandler? PropertyChanged;

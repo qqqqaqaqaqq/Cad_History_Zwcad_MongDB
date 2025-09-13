@@ -100,7 +100,10 @@ namespace CadEye_WebVersion.ViewModels
                 _pdfbyte = value;
                 OnPropertyChanged();
                 if (_pdfbyte != null)
+                {
                     WeakReferenceMessenger.Default.Send(new SendByteMessage(_pdfbyte));
+                    WeakReferenceMessenger.Default.Send(new SendCompareByteMessage(null!));
+                }
             }
         }
 

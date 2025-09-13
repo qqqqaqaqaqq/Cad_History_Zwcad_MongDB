@@ -52,7 +52,9 @@ namespace CadEye_WebVersion.Commands
 
         public void NewCompareWindowHostOpen()
         {
-            if (pdfbyte == null || comparepdfbyte == null) { return; }
+            if (pdfbyte == null || comparepdfbyte == null) {
+                WeakReferenceMessenger.Default.Send(new SendStatusMessage("Compare Image not Exist"));
+                return; }
 
             List<Point> point = _pdfService.GetDifferences(pdfbyte, comparepdfbyte, 2000);
 
@@ -63,12 +65,15 @@ namespace CadEye_WebVersion.Commands
 
             System.Windows.Window window = _windowsService.Form_View(host);
 
+            WeakReferenceMessenger.Default.Send(new SendStatusMessage("Compare Image Succed"));
             OnWindowShow?.Invoke(window);
         }
 
         public void NewWindowHostOpen()
         {
-            if (pdfbyte == null) { return; }
+            if (pdfbyte == null) {
+                WeakReferenceMessenger.Default.Send(new SendStatusMessage("Image not Exist"));
+                return; }
 
             WindowsFormsHost host = _pdfService.Host_Created(pdfbyte);
 
@@ -76,6 +81,7 @@ namespace CadEye_WebVersion.Commands
 
             System.Windows.Window window = _windowsService.Form_View(host);
 
+            WeakReferenceMessenger.Default.Send(new SendStatusMessage("WinodwForm Show Succed"));
             OnWindowShow?.Invoke(window);
         }
     }

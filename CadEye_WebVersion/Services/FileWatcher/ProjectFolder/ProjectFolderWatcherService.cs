@@ -1,11 +1,13 @@
-﻿using CadEye_WebVersion.Models.Entity;
-using CadEye_WebVersion.Services.FileSystem;
+﻿using CadEye_WebVersion.Infrastructure.Utils;
+using CadEye_WebVersion.Models.Entity;
 using CadEye_WebVersion.Services.Mongo.Interfaces;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using MongoDB.Bson;
+
 namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
 {
     public class ProjectFolderWatcherService : IProjectFolderWatcherService
@@ -13,45 +15,29 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
         private ConcurrentQueue<FileSystemEventArgs> eventQueue_repository = new ConcurrentQueue<FileSystemEventArgs>();
         private readonly IChildFileService _childFileService;
 
-        private IFileSystem _fileSystem;
         public ProjectFolderWatcherService(
-            IFileSystem fileSystem,
             IChildFileService childFileService)
         {
-            _fileSystem = fileSystem;
             _childFileService = childFileService;
         }
+
+        private readonly Subject<FileSystemEventArgs> _subject = new Subject<FileSystemEventArgs>();
 
         public void SetupWatcher_repository(FileSystemWatcher _watcher)
         {
             Task.Run(Brdige_Queue_repository);
-            _watcher.Created += (s, e) => Bridge_Event_repository(s, e);
-            _watcher.EnableRaisingEvents = true;
-        }
-
-        private bool isCollecting = false;
-        public async Task Accculation(FileSystemEventArgs e)
-        {
-            List<string> watcherevent = new List<string>();
-            DateTime dateTime = DateTime.Now;
-
-            watcherevent.Add(e.FullPath);
-            if (!isCollecting)
-            {
-                if (watcherevent.Count() > 0)
+            _subject
+                .Subscribe(evt =>
                 {
-                    isCollecting = true;
-                    await Task.Delay(300);
+                    eventQueue_repository.Enqueue(evt);
+                });
 
+            _watcher.Created += (s, e) => _subject.OnNext(e);
+            _watcher.Changed += (s, e) => _subject.OnNext(e);
+            _watcher.Deleted += (s, e) => _subject.OnNext(e);
+            _watcher.Renamed += (s, e) => _subject.OnNext(e);
 
-                    isCollecting = false;
-                }
-            }
-        }
-
-        public void Bridge_Event_repository(object sender, FileSystemEventArgs e)
-        {
-            eventQueue_repository.Enqueue(e);
+            _watcher.EnableRaisingEvents = true;
         }
 
         public async Task Brdige_Queue_repository()
@@ -60,119 +46,72 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    (ObjectId id, string type) = await Repository(e);
+                    if (!await ExtFilterProvider.ExtFilter(e.FullPath)) continue; // 확장자 필터
 
-                    var node = new ChildFile();
-
+                    var Event = e.ChangeType;
                     string target = string.Empty;
-                    var fileinfo = new FileInfo(e.FullPath);
+                    var source_node = new ChildFile();
+                    var original_node = new ChildFile();
+                    string Description = string.Empty;
 
-                    target = $"{node.Id}_Created_{DateTime.Now:yyyyMMdd-HHmmss}.dwg";
+                    Debug.WriteLine(e.FullPath);
+                    if (await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100)) // 파일 읽을 수 있는지?
+                    {
+                        var fileinfo = new FileInfo(e.FullPath);
+                        var hash = await FileHashProvider.Hash_Allocated_Unique(e.FullPath);
+                        switch (Event)
+                        {
+                            case WatcherChangeTypes.Created:
+                                source_node.File_FullName = e.FullPath;
+                                source_node.File_Name = Path.GetFileName(e.FullPath);
+                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                                source_node.HashToken = hash;
+                                await _childFileService.AddAsync(source_node);
+                                break;
+                            case WatcherChangeTypes.Changed:
+                                original_node = await _childFileService.NameFindAsync(e.FullPath);
+                                source_node.Id = original_node.Id;
+                                source_node.File_FullName = e.FullPath;
+                                source_node.File_Name = Path.GetFileName(e.FullPath);
+                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                                source_node.HashToken = hash;
+                                await _childFileService.AddOrUpdateAsync(source_node);
+                                break;
+                            case WatcherChangeTypes.Renamed:
+                                RenamedEventArgs re = e as RenamedEventArgs;
+                                if (re == null) break;
+                                original_node = await _childFileService.NameFindAsync(re.OldFullPath);
+                                source_node.Id = original_node.Id;
+                                source_node.File_FullName = e.FullPath;
+                                source_node.File_Name = Path.GetFileName(e.FullPath);
+                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                                source_node.HashToken = hash;
+                                Description = $"{Path.GetFileName(re.OldFullPath)}";
+                                await _childFileService.AddOrUpdateAsync(source_node);
+                                break;
+                        }
+                        var chknode = await _childFileService.NameFindAsync(e.FullPath);
+                        target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_{Description}.dwg";
+                        target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
+                        await RetryProvider.RetryAsync(() => FileCopyProvider.FileCopy(e.FullPath, target), 10, 200);
+                    }
+                    else
+                    {
+                        var chknode = await _childFileService.NameFindAsync(e.FullPath);
+                        target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_.dwg";
+                        target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
+                        await RetryProvider.RetryAsync(() =>
+                        { 
+                            using var fs = File.Create(target);
+                            return Task.FromResult(true);
+                        }
+                        , 10
+                        , 200);
+                    }
                 }
                 else
                 {
                     await Task.Delay(100);
-                }
-            }
-        }
-
-        private async Task<(ObjectId, string)> Repository(FileSystemEventArgs e)
-        {
-            ObjectId id = ObjectId.Empty;
-            var fileinfo = new FileInfo(e.FullPath);
-
-            var node = await _childFileService.NameFindAsync(e.FullPath);
-
-
-            byte[] filehash = Hash_Allocated_Unique(e.FullPath);
-            var list = await _childFileService.FindAllAsync();
-
-            var matchinghHash = list.FindAll(x => x.HashToken.SequenceEqual(filehash));
-            var matchingFileName = matchinghHash.FindAll(x => x.File_Name == Path.GetFileName(e.FullPath));
-            var matchingAccesstime = matchingFileName.Find(x => x.AccesTime == fileinfo.LastAccessTime);
-
-            bool existedfile = _fileSystem.isRead(e.FullPath);
-
-            if (node == null)
-            {
-                if (matchinghHash.Count() == 0) // 생성
-                    return (id, "Created");
-                else
-                {
-                    if (matchingAccesstime != null) // 이동
-                    {
-                        id = matchingAccesstime.Id;
-                        return (id, "Moved");
-                    }
-
-                    if (matchingAccesstime == null) // 복사
-                        return (id, "Copied");
-                }
-            }
-            else
-            {
-                if (!existedfile) // 삭제
-                {
-                    id = node.Id;
-                    return (id, "Deleted");
-                }
-                else
-                {
-                    if (matchinghHash.Count() > 0 && matchingFileName.Count() == 0)
-                    {
-                        id = node.Id;
-                        return (id, "Renamed");
-                    }
-                    if (matchinghHash.Count() > 0 && matchingFileName.Count() > 0)
-                    {
-                        id = node.Id;
-                        return (id, "Changed");
-                    }
-                }
-            }
-            return (id, "Unkown");
-        }
-
-        public byte[] Hash_Allocated_Unique(string fullName)
-        {
-            bool check = _fileSystem.isRead(fullName);
-            if (!check) { return Array.Empty<byte>(); }
-            {
-                var fileName = Path.GetFileName(fullName);
-
-                if (fileName.StartsWith("~$"))
-                    return Array.Empty<byte>();
-
-                byte[] contentHash = Array.Empty<byte>();
-                int retries = 3;
-
-                while (retries-- > 0)
-                {
-                    try
-                    {
-                        using (var stream = new FileStream(fullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                        using (var sha = SHA256.Create())
-                        {
-                            contentHash = sha.ComputeHash(stream);
-                        }
-                        break;
-                    }
-                    catch (IOException)
-                    {
-                        if (retries == 0)
-                        {
-                            Debug.WriteLine($"파일 잠김: {fullName}");
-                            return Array.Empty<byte>();
-                        }
-                        Task.Delay(100).Wait();
-                    }
-                }
-
-                string combined = Convert.ToBase64String(contentHash);
-                using (var sha = SHA256.Create())
-                {
-                    return sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(combined));
-
                 }
             }
         }
