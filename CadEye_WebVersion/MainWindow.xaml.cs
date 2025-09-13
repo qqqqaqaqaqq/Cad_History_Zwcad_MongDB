@@ -9,11 +9,14 @@ namespace CadEye_WebVersion
     {
         private readonly MainViewModel _viewModel;
         private readonly InformationView _information;
+        private readonly SettingView _settingView;
         private readonly HomeView _homeView;
         public MainWindow(
             MainViewModel viewModel,
             InformationView information,
-            HomeView homeView)
+            HomeView homeView,
+            SettingView settingView
+            )
         {
             InitializeComponent();
             _viewModel = viewModel;
@@ -21,9 +24,11 @@ namespace CadEye_WebVersion
 
             _information = information;
             _homeView = homeView;
+            _settingView = settingView;
 
             InformationHost.Content = _information;
             HomeHost.Content = _homeView;
+            SettingHost.Content = _settingView;
         }
     }
 }

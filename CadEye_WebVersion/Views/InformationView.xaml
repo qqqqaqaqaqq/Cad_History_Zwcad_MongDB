@@ -8,7 +8,7 @@
              xmlns:behavior="clr-namespace:CadEye_WebVersion.Behavior"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="10">
+    <Grid Margin="10,5,10,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="45*"/>
             <RowDefinition Height="4*"/>
@@ -53,7 +53,7 @@
                             Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
-                
+
                 <ListBox
                     Grid.Column="1"
                     Margin="5"
@@ -77,17 +77,25 @@
                 </Grid.RowDefinitions>
                 <Border
                     BorderBrush="#e1eaeb"
-                    BorderThickness="0.5">
+                    BorderThickness="0.5"
+                    Margin="0,0,0,5">
                     <ContentControl 
                     Grid.Row="0"
                     Content="{Binding Host}"/>
                 </Border>
-                <Button 
+                <Border
                     Grid.Row="1"
-                    Style="{StaticResource TextButtonBase}"
-                    Content="View"
-                    FontFamily="Segoe UI"
+                    CornerRadius="10"
+                    Background="{Binding DataContext.GlobalColor, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <Button 
+                        Style="{StaticResource TextButtonBase}"
+                        Background="Transparent"
+                        Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Content="View"
+                        FontWeight="Bold"
+                        FontFamily="Segoe UI"
                     Command="{Binding WindoHostCommand.NewWindowHostCommand}"/>
+                </Border>
             </Grid>
 
 
@@ -99,17 +107,26 @@
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Border 
-                        BorderBrush="#e1eaeb"     
-                        BorderThickness="0.5">
+                    BorderBrush="#e1eaeb"     
+                    BorderThickness="0.5"
+                    Margin="0,0,0,5">
                     <ContentControl 
-                     Grid.Row="0"
-                     Content="{Binding HistoryHost}"/>
+                        Grid.Row="0"
+                        Content="{Binding HistoryHost}"/>
                 </Border>
-                <Button 
+                <Border
                     Grid.Row="1"
-                    Style="{StaticResource TextButtonBase}"
-                    Content="View"
-                    Command="{Binding WindoHostCommand.NewCompareWindowHostCommand}"/>
+                    CornerRadius="10"
+                    Background="{Binding DataContext.GlobalColor, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <Button 
+                        Grid.Row="1"
+                        Style="{StaticResource TextButtonBase}"
+                        Background="Transparent"
+                        Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                        FontWeight="Bold"
+                        Content="View"
+                        Command="{Binding WindoHostCommand.NewCompareWindowHostCommand}"/>
+                </Border>
             </Grid>
         </Grid>
     </Grid>

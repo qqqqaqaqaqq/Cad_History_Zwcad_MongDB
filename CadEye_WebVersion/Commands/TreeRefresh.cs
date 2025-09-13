@@ -21,12 +21,12 @@ namespace CadEye_WebVersion.Commands
 
         public async Task OnTreeRefresh()
         {
-            var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
             var path = AppSettings.ProjectPath;
             if (path == null) return;
 
-            var projectname = Path.GetFileName(path);
+            var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
 
+            var projectname = Path.GetFileName(path);
             var send = BuildTree.BuildTreeFromFiles(allFiles, path, projectname);
 
             WeakReferenceMessenger.Default.Send(new SendFileTreeNode(send));

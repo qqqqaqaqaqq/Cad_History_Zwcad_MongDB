@@ -9,7 +9,7 @@
         xmlns:behavior="clr-namespace:CadEye_WebVersion.Behavior"
         xmlns:vm ="clr-namespace:CadEye_WebVersion.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" 
+        Title="Cad Eye" 
         MinHeight="750"
         MinWidth="1250"
         Width="1250"
@@ -26,9 +26,9 @@
                 Grid.Column="0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="80"/>
-                        <RowDefinition Height="*"/>
                         <RowDefinition Height="50"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="25"/>
                     </Grid.RowDefinitions>
 
                     <Grid
@@ -46,16 +46,24 @@
                             <TextBlock
                                 Grid.Column="0"
                                 Style="{StaticResource TextBlockBase}"
-                                FontSize="30"                       
-                                Text="CAD EYE"
-                                FontFamily="Verdana Bold"/>
+                                FontSize="20"                       
+                                Text="{Binding ProjectName}"
+                                Foreground="{Binding Theme}"
+                                FontFamily="Segoe UI Semibold"/>
                             <Button
                                 Grid.Column="1"
                                 x:Name="FolderSelectBtn"
                                 Style="{StaticResource FolderIconStyle}"
-                                Command="{Binding FolderSelecter.FolderSelectCommand}"/>
+                                Command="{Binding FolderSelecter.FolderSelectCommand}">
+                                <Button.Content>
+                                    <Image 
+                                        Source="{Binding FolderIcon}"
+                                        Width="30"
+                                        Height="30"/>
+                                </Button.Content>
+                            </Button>
                             <Button 
-                                x:Name="SettingBtn"
+                                x:Name="RefreshBtn"
                                 Grid.Column="2"
                                 Style="{StaticResource RefreshIconStyle}"
                                 Command="{Binding TreeRefreshHandler.TreeRefreshCommand}"/>
@@ -66,23 +74,33 @@
                     Grid.Row="1"
                     x:Name="TreeHostBox">
                         <Border 
-                        x:Name="TreeBorder"
-                        Style="{StaticResource TreeBorderStyle}">
+                            x:Name="TreeBorder"
+                            Style="{StaticResource TreeBorderStyle}"
+                            Background="{Binding ViewCotainBackGround}"
+                            Margin="5,0,5,0">
                             <TreeView
-                            x:Name="FolderTree"
-                            ItemsSource="{Binding FileList}"
-                            Style="{StaticResource TreeStyle}">
+                                x:Name="FolderTree"
+                                 Margin="10"
+                                ItemsSource="{Binding FileList}"
+                                Style="{StaticResource TreeStyle}"
+                                Background="{Binding ViewCotainBackGround}">
                                 <i:Interaction.Behaviors>
                                     <behavior:BindableSelectedItemBehaviorTree SelectedItem="{Binding SelectedTreeNode, Mode=TwoWay}" />
                                 </i:Interaction.Behaviors>
                                 <TreeView.ItemTemplate>
-                                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                        <TextBlock Text="{Binding Name}" />
+                                    <HierarchicalDataTemplate 
+                                        ItemsSource="{Binding Children}">
+                                        <TextBlock 
+                                            Text="{Binding Name}"/>
                                     </HierarchicalDataTemplate>
                                 </TreeView.ItemTemplate>
                                 <TreeView.ItemContainerStyle>
                                     <Style TargetType="TreeViewItem">
                                         <Setter Property="IsExpanded" Value="True" />
+                                        <Setter 
+                                            Property="Foreground" 
+                                            Value="{Binding DataContext.Theme,
+                                            RelativeSource={RelativeSource AncestorType=TreeView}}" />
                                     </Style>
                                 </TreeView.ItemContainerStyle>
                             </TreeView>
@@ -92,8 +110,6 @@
 
                     <Border
                         Grid.Row="2"
-                        BorderBrush="#FFAAAAAA" 
-                        BorderThickness="0,0.5,0,0"
                         Margin="5,0,5,0">
                         <Grid>
                             <TextBlock
@@ -122,6 +138,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
                             </Grid.ColumnDefinitions>
                             <RadioButton
                                 x:Name="HomeViewbtn"
@@ -135,13 +152,22 @@
                                 Style="{StaticResource SwitchViewRadio}"
                                 GroupName="ViewGroup"
                                 Content="Main"/>
+                            <RadioButton
+                               x:Name="SettingViewbtn"
+                               Grid.Column="2"  
+                               Style="{StaticResource SwitchViewRadio}"
+                               GroupName="ViewGroup"
+                               Content="Setting"/>
                         </Grid>
                     </Border>
 
                     <Border
-                        Grid.Row="1">
+                        Grid.Row="1"
+                        Background="{Binding ViewCotainBackGround}"
+                        BorderBrush="{Binding GlobalBorderBrush}"
+                        BorderThickness="1,1,0,0">
                         <Grid>
-                            <ContentControl x:Name="HomeHost">
+                            <ContentControl x:Name="HomeHost" Grid.ColumnSpan="2">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -153,12 +179,24 @@
                                     </Style>
                                 </ContentControl.Style>
                             </ContentControl>
-                            <ContentControl x:Name="InformationHost">
+                            <ContentControl x:Name="InformationHost" Grid.ColumnSpan="2">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ElementName=MainViewbtn, Path=IsChecked}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                            </ContentControl>
+                            <ContentControl x:Name="SettingHost" Grid.ColumnSpan="2">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=SettingViewbtn, Path=IsChecked}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>

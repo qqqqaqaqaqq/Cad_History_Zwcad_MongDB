@@ -28,6 +28,7 @@ namespace CadEye_WebVersion
             ConfigureServices(services);
             ServiceProvider = services.BuildServiceProvider();
             var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+            AppSettings.ThemeToggle = true; // 이후 MongoDb에서 가져오기
             mainWindow.Show();
         }
 
@@ -70,6 +71,7 @@ namespace CadEye_WebVersion
             // =====================
             services.AddSingleton<HomeView>();
             services.AddSingleton<MainViewModel>();
+            services.AddSingleton<SettingViewModel>();
             services.AddSingleton<InformationViewModel>();
 
             // =====================
@@ -82,11 +84,13 @@ namespace CadEye_WebVersion
             // =====================
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<MainWindow>();
+            services.AddSingleton<SettingView>();
             services.AddSingleton<InformationView>();
         }
     }
     public static class AppSettings
     {
+        public static bool ThemeToggle { get; set; }
         public static string? ProjectPath { get; set; }
         public static string? DatabaseType { get; set; }
         public static string? RepositoryPdfFolder { get; set; }

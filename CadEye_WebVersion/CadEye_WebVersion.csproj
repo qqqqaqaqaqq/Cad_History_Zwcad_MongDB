@@ -10,12 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Commands\Helpers\AsyncCommand.cs" />
-    <Compile Remove="Commands\Helpers\AsyncCommandT.cs" />
-    <Compile Remove="Commands\Helpers\RelayCommand.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <COMReference Include="ZWCAD">
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
@@ -45,10 +39,6 @@
     <PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
     <PackageReference Include="PDFsharp" Version="6.2.1" />
     <PackageReference Include="System.Reactive" Version="6.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Commands\Helpers\" />
   </ItemGroup>
 
 </Project>

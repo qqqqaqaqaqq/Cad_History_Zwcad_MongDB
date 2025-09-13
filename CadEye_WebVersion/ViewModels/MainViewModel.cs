@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using CadEye_WebVersion.ViewModels.Messages.ThemeBrush;
 
 namespace CadEye_WebVersion.ViewModels
 {
@@ -36,17 +37,55 @@ namespace CadEye_WebVersion.ViewModels
         public FileSystemWatcher? _watcher_repository_dwg;
         public FileSystemWatcher? _watcher_repository_pdf;
 
-        private System.Windows.Media.Brush _globalcolor = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#fff"));
+        private System.Windows.Media.Brush _globalcolor = 
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#80EEEEEE"));
+        private System.Windows.Media.Brush? _theme = 
+            new SolidColorBrush((System.Windows.Media.Color) System.Windows.Media.ColorConverter.ConvertFromString("#000"));
+        private System.Windows.Media.Brush? _viewCotainBackGround = 
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#fff"));
+        private System.Windows.Media.Brush? _globalBorderBrush =
+            new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFCCCCCC"));
 
         private string _statusMessage { get; set; } = "Status";
 
-        public string StatusMessage
+        private string? _projectname;
+
+        public System.Windows.Media.Brush? GlobalBorderBrush
         {
-            get => _statusMessage;
+            get => _globalBorderBrush;
             set
             {
-                _statusMessage = value;
-                OnPropertyChanged();
+                if (_globalBorderBrush != value)
+                {
+                    _globalBorderBrush = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public System.Windows.Media.Brush? ViewCotainBackGround
+        {
+            get => _viewCotainBackGround;
+            set
+            {
+                if (_viewCotainBackGround != value)
+                {
+                    _viewCotainBackGround = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public System.Windows.Media.Brush? Theme
+        {
+            get => _theme;
+            set
+            {
+                if (_theme != value)
+                {
+                    _theme = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -60,7 +99,27 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        public ObservableCollection<Models.FileTreeNode>? FileList
+        public string ProjectName
+        {
+            get => _projectname ?? "Project Name";
+            set
+            {
+               _projectname = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set
+            {
+                _statusMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<FileTreeNode>? FileList
         {
             get => _fileList;
             set
@@ -92,6 +151,21 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
+        private ImageSource? _folderIcon;
+
+        public ImageSource? FolderIcon
+        {
+            get => _folderIcon;
+            set
+            {
+                if (_folderIcon != value)
+                {
+                    _folderIcon = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public MainViewModel(
             iFolderService folderService,
             IChildFileService childFileService,
@@ -104,6 +178,7 @@ namespace CadEye_WebVersion.ViewModels
             IProjectFolderWatcherService projectFolderWatcherService
             )
         {
+            FolderIcon = SystemIconProvider.FolderIcon();
             FolderSelecter = new FolderSelect(folderService, OnFolderSelected);
             TreeRefreshHandler = new TreeRefresh(childFileService);
             _folderService = folderService;
@@ -128,6 +203,34 @@ namespace CadEye_WebVersion.ViewModels
                     FileList = new ObservableCollection<FileTreeNode> { m.Value };
                 });
             });
+            WeakReferenceMessenger.Default.Register<SendGlobalColor>(this, async (r, m) =>
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                   GlobalColor = m.Value;
+                });
+            });
+            WeakReferenceMessenger.Default.Register<SendViewContainBackGround>(this, async (r, m) =>
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    ViewCotainBackGround = m.Value;
+                });
+            });
+            WeakReferenceMessenger.Default.Register<SendGlobalBorderBrush>(this, async (r, m) =>
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    GlobalBorderBrush = m.Value;
+                });
+            });
+            WeakReferenceMessenger.Default.Register<SendForeGroundBrush>(this, async (r, m) =>
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Theme = m.Value;
+                });
+            });
         }
 
         private async Task SatatusUpdate(string status)
@@ -147,7 +250,12 @@ namespace CadEye_WebVersion.ViewModels
             if (string.IsNullOrEmpty(projectname))
                 return;
 
-            AppSettings.ProjectPath = projectname;
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                ProjectName = projectname;
+            });
+
+            AppSettings.ProjectPath = path;
             string dbName = projectname.Trim().Replace(" ", "_").Replace(".", "_");
 
             if (string.IsNullOrEmpty(dbName))
@@ -226,27 +334,40 @@ namespace CadEye_WebVersion.ViewModels
             }
             StatusMessage = "Folder Setting Completed";
 
-            // 파일 와처 셋팅 성공 여부 체크
-            bool watchercheck = false;
-
-            watchercheck = StartWatcher(ref _watcher_repository_project!, path, "project");
-            if (!watchercheck)
+            // 파일 와처 셋팅
+            var _watcher = SetWatcher.StartWatcher(ref _watcher_repository_project!, path);
+            try
+            {
+                _projectFolderWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
             {
                 StatusMessage = "ProjectFolder Monitoring Failure";
                 return;
             }
             StatusMessage = "ProjectFolder Monitoring Completed";
 
-            watchercheck = StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath, "dwg");
-            if (!watchercheck)
+            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath);
+            try
             {
-                StatusMessage = "Repository folder Monitoring Failure";
+                _dwgWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
+            {
+                StatusMessage = "Repository folder Monitoring  Failure";
                 return;
             }
             StatusMessage = "Repository folder Monitoring  Completed";
 
-            watchercheck = StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath, "pdf");
-            if (!watchercheck)
+            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath);
+            try
+            {
+                _pdfWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
             {
                 StatusMessage = "Repository Pdf Folder Monitoring Failure";
                 return;
@@ -277,54 +398,20 @@ namespace CadEye_WebVersion.ViewModels
 
             // TreeView 작성
             allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
-            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                FileList = new ObservableCollection<FileTreeNode> { BuildTree.BuildTreeFromFiles(allFiles, path, projectname) };
-            });
-
-            StatusMessage = "FileList View Completed";
-        }
-
-        public bool StartWatcher(ref FileSystemWatcher _watcher, string path, string folder)
-        {
             try
             {
-                if (_watcher != null)
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    _watcher.EnableRaisingEvents = false;
-                    _watcher.Dispose();
-                    _watcher = null!;
-                }
-                _watcher = new FileSystemWatcher(path)
-                {
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.CreationTime
-                                 | NotifyFilters.FileName
-                                 | NotifyFilters.LastAccess
-                                 | NotifyFilters.DirectoryName
-                                 | NotifyFilters.LastWrite
-                };
-                _watcher.InternalBufferSize = 64 * 1024;
-
-                switch (folder)
-                {
-                    case "dwg":
-                        _dwgWatcherService.SetupWatcher_repository(_watcher);
-                        break;
-                    case "pdf":
-                        _pdfWatcherService.SetupWatcher_repository(_watcher);
-                        break;
-                    case "project":
-                        _projectFolderWatcherService.SetupWatcher_repository(_watcher);
-                        break;
-                }
-                return true;
+                    FileList = new ObservableCollection<FileTreeNode> { BuildTree.BuildTreeFromFiles(allFiles, path, projectname) };
+                });
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.WriteLine(ex.ToString());
-                return false;
+
+                StatusMessage = "FileList View Failure";
             }
+
+            StatusMessage = "FileList View Completed";
         }
 
 
