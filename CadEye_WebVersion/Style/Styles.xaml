@@ -135,10 +135,11 @@
     <Style x:Key="SwitchViewRadio" TargetType="RadioButton">
         <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0,0,0,0"/>
+        <Setter Property="BorderBrush" Value="{Binding GlobalBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Foreground" Value="#FF888888"/>
+
 
         <Setter Property="Template">
             <Setter.Value>

@@ -17,7 +17,7 @@ namespace CadEye_WebVersion
 {
     public partial class App : System.Windows.Application   
     {
-        public IServiceProvider? ServiceProvider { get; private set; }
+        public static IServiceProvider? ServiceProvider { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -67,25 +67,25 @@ namespace CadEye_WebVersion
             services.AddSingleton<IZwcadService, ZwcadService>();
 
             // =====================
-            // ViewModel
-            // =====================
-            services.AddSingleton<HomeView>();
-            services.AddSingleton<MainViewModel>();
-            services.AddSingleton<SettingViewModel>();
-            services.AddSingleton<InformationViewModel>();
-
-            // =====================
             // Commands
             // =====================
             services.AddSingleton<ViewSwitch>();
 
             // =====================
+            // ViewModel
+            // =====================
+            services.AddSingleton<MainViewModel>();
+            services.AddTransient<HomeViewModel>();       
+            services.AddTransient<SettingViewModel>();      
+            services.AddTransient<InformationViewModel>();
+
+            // =====================
             // View
             // =====================
-            services.AddSingleton<HomeViewModel>();
             services.AddSingleton<MainWindow>();
-            services.AddSingleton<SettingView>();
-            services.AddSingleton<InformationView>();
+            services.AddTransient<HomeView>();  
+            services.AddTransient<SettingView>();
+            services.AddTransient<InformationView>();
         }
     }
     public static class AppSettings

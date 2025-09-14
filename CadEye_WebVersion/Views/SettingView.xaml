@@ -8,10 +8,34 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid
         Margin="10">
-        <Button
-            x:Name="ThemeSetting"
-            Command="{Binding OnThemeToggle.ThemeToggleCommand}"
-            Background="Wheat"/>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="150"/>
+        </Grid.RowDefinitions>
+        <Grid
+            Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <RadioButton
+                x:Name="DarkMode"
+                Grid.Column="0"
+                Margin="20"
+                Command="{Binding OnThemeToggle.ThemeToggleCommand}"
+                Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                CommandParameter="DarkMode"
+                Background="Wheat" 
+                Content="DarkMode"/>
+            <RadioButton
+                x:Name="WhiteMode"
+                Grid.Column="1"
+                Margin="20"
+                Command="{Binding OnThemeToggle.ThemeToggleCommand}"
+                Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                CommandParameter="WhiteMode"
+                Background="Wheat" 
+                Content="WhiteMode"/>
+        </Grid>
     </Grid>
 </UserControl>

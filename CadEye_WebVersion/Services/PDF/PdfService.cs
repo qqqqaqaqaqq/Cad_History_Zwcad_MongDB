@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms.Integration;
+using CadEye_WebVersion.Infrastructure.Utils;
 
 namespace CadEye_WebVersion.Services.PDF
 {
@@ -19,6 +20,8 @@ namespace CadEye_WebVersion.Services.PDF
 
         public async Task<byte[]> RenderPdfPage(string path)
         {
+            bool check = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(path)), 100, 100);
+            if (!check) { return new byte[] { }; }
             byte[] resource = await Task.Run(() =>
             {
                 byte[] result = File.ReadAllBytes(path);

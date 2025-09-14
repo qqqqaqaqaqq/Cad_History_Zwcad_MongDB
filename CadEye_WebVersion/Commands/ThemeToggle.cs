@@ -8,16 +8,26 @@ namespace CadEye_WebVersion.Commands
 
     public class ThemeToggle
     {
-        public RelayCommand ThemeToggleCommand { get; }
+        public RelayCommand<object> ThemeToggleCommand { get; }
 
         public ThemeToggle()
         {
-            ThemeToggleCommand = new RelayCommand(OnThemeToggle);
+            ThemeToggleCommand = new RelayCommand<object>(OnThemeToggle);
         }
 
-        public void OnThemeToggle()
+        public void OnThemeToggle(object? parameter)
         {
             System.Windows.Media.Brush globalColor, theme, viewContainBackground, globalBorderBrush;
+            if (parameter == null) { return; }
+            string? mode = parameter as string;
+            if (mode == "DarkMode")
+            {
+                AppSettings.ThemeToggle = true;
+            }
+            else
+            {
+                AppSettings.ThemeToggle = false;
+            }
 
             if (AppSettings.ThemeToggle)
             {

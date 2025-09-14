@@ -6,11 +6,67 @@
              xmlns:local="clr-namespace:CadEye_WebVersion.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid
-        Margin="10">
-        <TextBlock
-            Text="Home">
-            
-        </TextBlock>
+    <Grid>
+        <Grid
+            x:Name="Navi"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Visibility="{Binding NaviVisiblePage}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="200"/>
+                <RowDefinition Height="200"/>
+            </Grid.RowDefinitions>
+
+            <Button
+                x:Name="Informationbtn"
+                Margin="15"
+                Grid.Row="0"
+                Grid.Column="0"
+                Content="Information"
+                Command="{Binding Redirect.RedirectCommand}"
+                CommandParameter="Information"
+                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                BorderThickness="1"/>
+            <Button
+                x:Name="Admin"
+                Margin="15"
+                Grid.Row="0"
+                Grid.Column="1"
+                Content="Admin"        
+                Command="{Binding Redirect.RedirectCommand}" 
+                CommandParameter="Admin"
+                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                BorderThickness="1"/>
+            <Button
+                x:Name="Cloud"
+                Margin="15"
+                Grid.Row="1"
+                Grid.Column="0"
+                Content="Cloud"         
+                Command="{Binding Redirect.RedirectCommand}"   
+                CommandParameter="Cloud"
+                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                BorderThickness="1"/>
+            <Button
+                x:Name="Settingbtn"
+                Margin="15"
+                Grid.Row="1"
+                Grid.Column="1"
+                Content="Setting"        
+                Command="{Binding Redirect.RedirectCommand}"     
+                CommandParameter="Setting"
+                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                BorderThickness="1"/>
+        </Grid>
+        
+        <ContentControl
+            x:Name="ContentHost"
+            Content="{Binding ViewPage}"
+            HorizontalAlignment="Stretch"     
+            VerticalAlignment="Stretch"/>
     </Grid>
 </UserControl>

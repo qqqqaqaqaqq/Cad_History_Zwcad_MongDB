@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using CadEye_WebVersion.ViewModels;
 
 namespace CadEye_WebVersion.Views
 {
@@ -7,9 +7,16 @@ namespace CadEye_WebVersion.Views
     /// </summary>
     public partial class HomeView : System.Windows.Controls.UserControl
     {
-        public HomeView()
+        private readonly HomeViewModel _viewModel;
+
+
+        public HomeView(
+            HomeViewModel viewModel)
         {
             InitializeComponent();
+            _viewModel = viewModel;
+
+            this.DataContext = _viewModel;
         }
     }
 }

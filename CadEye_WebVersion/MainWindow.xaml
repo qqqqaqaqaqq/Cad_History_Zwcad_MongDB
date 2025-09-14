@@ -28,7 +28,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="50"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="25"/>
+                        <RowDefinition Height="40"/>
                     </Grid.RowDefinitions>
 
                     <Grid
@@ -123,80 +123,211 @@
                 </Grid>
             </Border>
 
+
             <Border    
                 Grid.Column="1">
                 <Grid >
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="50"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border 
+                    <Grid
+                        HorizontalAlignment="Stretch"
                         Grid.Row="0">
-                        <Grid
-                            HorizontalAlignment="Left">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="100"/>
-                            </Grid.ColumnDefinitions>
-                            <RadioButton
-                                x:Name="HomeViewbtn"
-                                Grid.Column="0"  
+                        <StackPanel 
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Stretch">
+                            <Grid Width="100" Visibility="{Binding HomeViewBtn1Visibility}">
+                                <RadioButton 
+                                    x:Name="HomeViewbtn1"
+                                    Content="{Binding NaviName1}"
+                                    Style="{StaticResource SwitchViewRadio}"
+                                    GroupName="RadioGroup"
+                                    IsChecked="{Binding HomeCheck1, Mode=TwoWay}"/>
+                                <Button
+                                    x:Name="HomeViewClosebtn1"
+                                    Content="X"
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Right"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TextButtonBase}"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding CloseHomeViewCommand}"
+                                    CommandParameter="1"/>
+                            </Grid>
+
+                            <Grid Width="100" Visibility="{Binding HomeViewBtn2Visibility}">
+                                <RadioButton 
+                                    x:Name="HomeViewbtn2"
+                                    Content="{Binding NaviName2}"
+                                    Style="{StaticResource SwitchViewRadio}"
+                                    GroupName="RadioGroup"
+                                    IsChecked="{Binding HomeCheck2, Mode=TwoWay}"/>
+                                <Button
+                                    x:Name="HomeViewClosebtn2"
+                                    Content="X"
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TextButtonBase}"
+                                    Command="{Binding CloseHomeViewCommand}"
+                                    CommandParameter="2"/>
+                            </Grid>
+
+                            <Grid Width="100" Visibility="{Binding HomeViewBtn3Visibility}">
+                                <RadioButton 
+                                    x:Name="HomeViewbtn3"
+                                    Content="{Binding NaviName3}"
+                                    Style="{StaticResource SwitchViewRadio}"
+                                    GroupName="RadioGroup"
+                                    IsChecked="{Binding HomeCheck3, Mode=TwoWay}"/>
+                                <Button
+                                    x:Name="HomeViewClosebtn3"
+                                    Content="X"
+                                    Width="20"
+                                    Height="20"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TextButtonBase}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding CloseHomeViewCommand}"
+                                    CommandParameter="3"/>
+                            </Grid>
+
+                            <Grid Width="100" Visibility="{Binding HomeViewBtn4Visibility}">
+                                <RadioButton 
+                                    x:Name="HomeViewbtn4"
+                                    Content="{Binding NaviName4}"
+                                    Style="{StaticResource SwitchViewRadio}"
+                                    GroupName="RadioGroup"
+                                    IsChecked="{Binding HomeCheck4, Mode=TwoWay}"/>
+                                <Button
+                                    x:Name="HomeViewClosebtn4"
+                                    Content="X"
+                                    Width="20"
+                                    Height="20"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TextButtonBase}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding CloseHomeViewCommand}"
+                                    CommandParameter="4"/>
+                            </Grid>
+
+                            <Grid Width="100" Visibility="{Binding HomeViewBtn5Visibility}">
+                                <RadioButton 
+                                    x:Name="HomeViewbtn5"
+                                    Content="{Binding NaviName5}"
+                                    Style="{StaticResource SwitchViewRadio}"
+                                    GroupName="RadioGroup"
+                                    IsChecked="{Binding HomeCheck5, Mode=TwoWay}"/>
+                                <Button
+                                    x:Name="HomeViewClosebtn5"
+                                    Content="X"
+                                    Width="20"
+                                    Height="20"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Style="{StaticResource TextButtonBase}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding CloseHomeViewCommand}"
+                                    CommandParameter="5"/>
+                            </Grid>
+
+                            <RadioButton 
+                                x:Name="AddRadio"
+                                Width="100"
+                                Content="+"
                                 Style="{StaticResource SwitchViewRadio}"
-                                GroupName="ViewGroup"
-                                Content="Home"/>
-                            <RadioButton
-                                x:Name="MainViewbtn"
-                                Grid.Column="1"  
-                                Style="{StaticResource SwitchViewRadio}"
-                                GroupName="ViewGroup"
-                                Content="Main"/>
-                            <RadioButton
-                               x:Name="SettingViewbtn"
-                               Grid.Column="2"  
-                               Style="{StaticResource SwitchViewRadio}"
-                               GroupName="ViewGroup"
-                               Content="Setting"/>
-                        </Grid>
-                    </Border>
+                                Command="{Binding AddRadioCommand}"
+                                GroupName="RadioGroup"
+                                Visibility="{Binding AddBtnVisibility}"/>
+                            <Border
+                                Width="3000"
+                                BorderBrush="{Binding GlobalBorderBrush}"
+                                BorderThickness="0,0,0,1"/>
+                        </StackPanel>
+                    </Grid>
 
                     <Border
-                        Grid.Row="1"
-                        Background="{Binding ViewCotainBackGround}"
+                        Grid.Row="1"   
                         BorderBrush="{Binding GlobalBorderBrush}"
-                        BorderThickness="1,1,0,0">
+                        Background="{Binding ViewCotainBackGround}"
+                        BorderThickness="1,0,0,0">
                         <Grid>
-                            <ContentControl x:Name="HomeHost" Grid.ColumnSpan="2">
+                            <ContentControl 
+                                x:Name="HomeHost1"
+                                Content="{Binding HomeHost1Content}">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn, Path=IsChecked}" Value="True">
+                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn1, Path=IsChecked}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ContentControl.Style>
                             </ContentControl>
-                            <ContentControl x:Name="InformationHost" Grid.ColumnSpan="2">
+                            <ContentControl 
+                                x:Name="HomeHost2"
+                                Content="{Binding HomeHost2Content}">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ElementName=MainViewbtn, Path=IsChecked}" Value="True">
+                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn2, Path=IsChecked}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ContentControl.Style>
                             </ContentControl>
-                            <ContentControl x:Name="SettingHost" Grid.ColumnSpan="2">
+                            <ContentControl 
+                                x:Name="HomeHost3"
+                                Content="{Binding HomeHost3Content}">
                                 <ContentControl.Style>
                                     <Style TargetType="ContentControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding ElementName=SettingViewbtn, Path=IsChecked}" Value="True">
+                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn3, Path=IsChecked}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                            </ContentControl>
+                            <ContentControl 
+                                x:Name="HomeHost4"
+                                Content="{Binding HomeHost4Content}">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn4, Path=IsChecked}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                            </ContentControl>
+                            <ContentControl 
+                                x:Name="HomeHost5"
+                                Content="{Binding HomeHost5Content}">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ElementName=HomeViewbtn5, Path=IsChecked}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
