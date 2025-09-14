@@ -4,8 +4,7 @@ CadEye is a CAD history tracking tool designed for Zwcad.
 This project is built with .NET Framework and allows users to manage and review their CAD activity records efficiently.
 
 
-⚠ Note: This project was developed in approximately 2 weeks, with about 1 week of debugging. 
-There are still known bugs, so please use it for testing purposes only.
+⚠ Note: This project is still in progress.
 
 ---
 
