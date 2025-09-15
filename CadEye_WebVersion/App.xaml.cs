@@ -1,17 +1,19 @@
-﻿using CadEye_WebVersion.Services.WindowService;
-using CadEye_WebVersion.Commands;
+﻿using CadEye_WebVersion.Commands;
 using CadEye_WebVersion.Services.FileWatcher.ProjectFolder;
 using CadEye_WebVersion.Services.FileWatcher.Repository;
 using CadEye_WebVersion.Services.FileWatcher.RepositoryPdf;
 using CadEye_WebVersion.Services.FolderService;
+using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.Mongo.Services;
 using CadEye_WebVersion.Services.PDF;
+using CadEye_WebVersion.Services.WindowService;
 using CadEye_WebVersion.Services.Zwcad;
 using CadEye_WebVersion.ViewModels;
 using CadEye_WebVersion.Views;
+using CadEye_WebVersion.Services.Google;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using CadEye_WebVersion.Services.Mongo.Interfaces;
+using DotNetEnv;
 
 namespace CadEye_WebVersion
 {
@@ -19,16 +21,29 @@ namespace CadEye_WebVersion
     {
         public static IServiceProvider? ServiceProvider { get; private set; }
 
+        public readonly ThemeToggle themeToggle = new ThemeToggle();
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
+            Env.Load(@"C:\Users\Hong\Desktop\CadEye_WebVersion\CadEye_WebVersion\.env");
+            string connectionString = Env.GetString("MONGO_URI");
+            string mygoogleId = Env.GetString("GOOGLE_ID");
+            string mygoogleSecrete = Env.GetString("GOOGLE_SECRETE");
+
+            AppSettings.ServerIP = connectionString;
+            AppSettings.MyGoogleId = mygoogleId;
+            AppSettings.MyGoogleSecrete = mygoogleSecrete;
             AppSettings.DatabaseType = "LocalMongo";
+            AppSettings.ProjectName = "CadEye";
+
             var services = new ServiceCollection();
             ConfigureServices(services);
             ServiceProvider = services.BuildServiceProvider();
             var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-            AppSettings.ThemeToggle = true; // 이후 MongoDb에서 가져오기
+            AppSettings.ThemeToggle = "DarkMode";
+            themeToggle.OnThemeToggle(AppSettings.ThemeToggle);
             mainWindow.Show();
         }
 
@@ -41,6 +56,7 @@ namespace CadEye_WebVersion
             services.AddSingleton<IEventEntryService, MongoDBEventEntry>();
             services.AddSingleton<IImageEntryService, MongoDBImageEntry>();
             services.AddSingleton<IRefEntryService, MongoDBRefEntry>();
+            services.AddSingleton<IUserControlService, UserControlService>();
 
             // =====================
             // 기타 서비스
@@ -55,6 +71,10 @@ namespace CadEye_WebVersion
             services.AddSingleton<IRepositoryWatcherService, RepositoryWatcherService>();
             services.AddSingleton<IRepositoryPdfWatcherService, RepositoryPdfWatcherService>();
 
+            // =====================
+            // Google 서비스
+            // =====================
+            services.AddSingleton<IGoogleService, GoogleService>();
 
             // =====================
             // PDF 서비스
@@ -70,7 +90,7 @@ namespace CadEye_WebVersion
             // Commands
             // =====================
             services.AddSingleton<ViewSwitch>();
-
+            
             // =====================
             // ViewModel
             // =====================
@@ -78,6 +98,7 @@ namespace CadEye_WebVersion
             services.AddTransient<HomeViewModel>();       
             services.AddTransient<SettingViewModel>();      
             services.AddTransient<InformationViewModel>();
+            services.AddTransient<LoginPageViewModel>();
 
             // =====================
             // View
@@ -86,14 +107,19 @@ namespace CadEye_WebVersion
             services.AddTransient<HomeView>();  
             services.AddTransient<SettingView>();
             services.AddTransient<InformationView>();
+            services.AddTransient<LoginPageView>();
         }
     }
     public static class AppSettings
     {
-        public static bool ThemeToggle { get; set; }
+        public static string? MyGoogleId { get; set; }
+        public static string? MyGoogleSecrete { get; set; }
+        public static string? ServerIP { get; set; }
+        public static string? ThemeToggle { get; set; }
         public static string? ProjectPath { get; set; }
         public static string? DatabaseType { get; set; }
         public static string? RepositoryPdfFolder { get; set; }
         public static string? RepositoryDwgFolder { get; set; }
+        public static string? ProjectName { get; set; }
     }
 }

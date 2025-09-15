@@ -89,6 +89,8 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                                 Description = $"{Path.GetFileName(re.OldFullPath)}";
                                 await _childFileService.AddOrUpdateAsync(source_node);
                                 break;
+                            case WatcherChangeTypes.Deleted:
+                                continue;
                         }
                         var chknode = await _childFileService.NameFindAsync(e.FullPath);
                         target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_{Description}.dwg";

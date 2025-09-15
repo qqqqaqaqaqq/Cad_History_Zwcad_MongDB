@@ -1,5 +1,7 @@
 ﻿using CadEye_WebVersion.Commands;
+using CadEye_WebVersion.ViewModels.Messages;
 using CadEye_WebVersion.Views;
+using CommunityToolkit.Mvvm.Messaging;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -8,7 +10,7 @@ namespace CadEye_WebVersion.ViewModels
 {
     public class HomeViewModel : INotifyPropertyChanged
     {
-        private object? _viewpage;  
+        private object? _viewpage;
         public object? ViewPage
         {
             get => _viewpage;
@@ -18,8 +20,9 @@ namespace CadEye_WebVersion.ViewModels
                 OnPropertyChanged(nameof(ViewPage));
             }
         }
-        private Visibility? _naviVisiblePage;
-        public Visibility? NaviVisiblePage
+
+        private Visibility _naviVisiblePage = Visibility.Visible;
+        public Visibility NaviVisiblePage
         {
             get => _naviVisiblePage;
             set
@@ -37,13 +40,14 @@ namespace CadEye_WebVersion.ViewModels
             _settingViewModel = settingViewModel;
         }
 
+
         private readonly InformationViewModel _informationViewModel;
         private readonly SettingViewModel _settingViewModel;
         // 메세지는 전역으로 모든 Host에 영향끼치니 사용 자제
 
         public void OnRedirectPage(string pagenmae)
         {
-            switch(pagenmae)
+            switch (pagenmae)
             {
                 case "Information":
                     ViewPage = new InformationView(_informationViewModel);

@@ -217,7 +217,7 @@ namespace CadEye_WebVersion.ViewModels
             // 이미지 리스트 등록
             var matchingid_image = await _imageEntryService.FindAsync(id);
             if (matchingid_image == null) return;
-            var collection_image = matchingid_image.Path.OrderBy(p => p.Time).First();
+            var collection_image = matchingid_image.Path.OrderBy(p => p.Time).Last();
             if (collection_image == null) { return; }
             if (collection_image.ImagePath == null) { return; }
             byte[] pdfbyte = await _pdfService.RenderPdfPage(collection_image.ImagePath);

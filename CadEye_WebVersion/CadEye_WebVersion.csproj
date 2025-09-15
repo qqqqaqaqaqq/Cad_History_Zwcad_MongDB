@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\web_light_rd_SI%402x.png" />
+    <None Remove="Assets\web_light_rd_SU%402x.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="ZWCAD">
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
@@ -32,6 +37,9 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.71.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="MongoDB.Driver" Version="3.4.3" />
@@ -39,6 +47,15 @@
     <PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
     <PackageReference Include="PDFsharp" Version="6.2.1" />
     <PackageReference Include="System.Reactive" Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\web_light_rd_SI@2x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\web_light_rd_SU@2x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

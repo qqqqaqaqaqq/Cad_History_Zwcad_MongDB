@@ -16,7 +16,9 @@ namespace CadEye_WebVersion.Services.Mongo.Services
 
         public void Init(string dbName)
         {
-            var client = new MongoClient("mongodb://localhost:27017");
+            var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
+            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            var client = new MongoClient(settings);
             var database = client.GetDatabase(dbName);
 
             var collectionName = "ChildFiles";

@@ -14,16 +14,13 @@ using CadEye_WebVersion.Views;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic;
 using MongoDB.Driver;
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace CadEye_WebVersion.ViewModels
@@ -95,10 +92,27 @@ namespace CadEye_WebVersion.ViewModels
             });
             WeakReferenceMessenger.Default.Register<SendPageName>(this, async (r, m) =>
             {
-                Pagename = m.Value;
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Pagename = m.Value;
+                });
+            });
+            WeakReferenceMessenger.Default.Register<SendUserName>(this, (r, m) =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (!string.IsNullOrEmpty(m.Value))
+                    {
+                        LoginWindowVisibility = Visibility.Collapsed;
+                        StatusMessage = "Login Success";
+                        UserName = $"{m.Value}님! 반갑습니다.";
+                    }
+                });
             });
         }
 
+        // 필드 프로퍼티
+        #region Fields & Properties
         private readonly iFolderService _folderService;
         public readonly IChildFileService _childFileService;
         public readonly IEventEntryService _eventEntryService;
@@ -111,11 +125,47 @@ namespace CadEye_WebVersion.ViewModels
         public FileSystemWatcher? _watcher_repository_project;
         public FileSystemWatcher? _watcher_repository_dwg;
         public FileSystemWatcher? _watcher_repository_pdf;
+        public FolderSelect FolderSelecter { get; }
+        public TreeRefresh TreeRefreshHandler { get; }
+        public iFolderService FolderService => _folderService;
+        #endregion
 
+        // 로그인 윈도우창
+        #region LoginWindow
+        private Visibility _loginWindowVisibility = Visibility.Visible;
+        public Visibility LoginWindowVisibility
+        {
+            get => _loginWindowVisibility;
+            set
+            {
+                _loginWindowVisibility = value;
+                OnPropertyChanged();
+            }
+        }
+        public object _loginHostContent = App.ServiceProvider!.GetRequiredService<LoginPageView>();
+        public object LoginHostContent
+        {
+            get => _loginHostContent;
+            set { _loginHostContent = value; OnPropertyChanged(); }
+        }
+        #endregion
 
+        // 첫 페이지
+        #region FirstPage
+        private string _username = "Guest";
+        public string UserName
+        {
+            get=> _username;
+            set
+            {
+                _username = value;
+                OnPropertyChanged();
+            }
+        }
+        #endregion
 
-        // Navi
-        // 하드코딩으로 제작됨 => 사유 아이디어 부족.
+        // Navi 하드코딩으로 제작됨 => 사유 아이디어 부족    
+        #region Navi
         public RelayCommand AddRadioCommand { get; }
         public RelayCommand<object?> CloseHomeViewCommand { get; }
         private Visibility _homeViewBtn1Visibility = Visibility.Collapsed;
@@ -124,6 +174,16 @@ namespace CadEye_WebVersion.ViewModels
         private Visibility _homeViewBtn4Visibility = Visibility.Collapsed;
         private Visibility _homeViewBtn5Visibility = Visibility.Collapsed;
         private Visibility _addBtnVisibility = Visibility.Visible;
+        private int _indexcheck = 0;
+        private bool _homeCheck1;
+        private bool _homeCheck2;
+        private bool _homeCheck3;
+        private bool _homeCheck4;
+        public string _naviname1 = "Home";
+        public string _naviname2 = "Home";
+        public string _naviname3 = "Home";
+        public string _naviname4 = "Home";
+        public string _pagename = "Home";
         public Visibility AddBtnVisibility
         {
             get => _addBtnVisibility;
@@ -178,6 +238,116 @@ namespace CadEye_WebVersion.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        public int IndexCheck
+        {
+            get => _indexcheck;
+            set
+            {
+                _indexcheck = value;
+                UpdateChecks();
+            }
+        }
+        public bool HomeCheck1
+        {
+            get => _homeCheck1;
+            set { _homeCheck1 = value; OnPropertyChanged(); }
+        }
+        public bool HomeCheck2
+        {
+            get => _homeCheck2;
+            set { _homeCheck2 = value; OnPropertyChanged(); }
+        }
+        public bool HomeCheck3
+        {
+            get => _homeCheck3;
+            set { _homeCheck3 = value; OnPropertyChanged(); }
+        }
+        public bool HomeCheck4
+        {
+            get => _homeCheck4; set
+            { _homeCheck4 = value; OnPropertyChanged(); }
+        }
+        public string NaviName1
+        {
+            get => _naviname1;
+            set
+            {
+                _naviname1 = value;
+                OnPropertyChanged();
+            }
+        }
+        public string NaviName2
+        {
+            get => _naviname2;
+            set
+            {
+                _naviname2 = value;
+                OnPropertyChanged();
+            }
+        }
+        public string NaviName3
+        {
+            get => _naviname3;
+            set
+            {
+                _naviname3 = value;
+                OnPropertyChanged();
+            }
+        }
+        public string NaviName4
+        {
+            get => _naviname4;
+            set
+            {
+                _naviname4 = value;
+                OnPropertyChanged();
+            }
+        }
+        public string ActivePage
+        {
+            get
+            {
+                if (HomeCheck1) return NaviName1;
+                if (HomeCheck2) return NaviName2;
+                if (HomeCheck3) return NaviName3;
+                if (HomeCheck4) return NaviName4;
+                return null!; // 활성화된 페이지 없음
+            }
+        }
+        public string Pagename
+        {
+            get => _pagename;
+            set
+            {
+                _pagename = value;
+                RedirectHandler(Pagename);
+            }
+        }
+        private object _homeHost1Content = App.ServiceProvider!.GetRequiredService<HomeView>();
+        public object HomeHost1Content
+        {
+            get => _homeHost1Content;
+            set { _homeHost1Content = value; OnPropertyChanged(); }
+        }
+        private object _homeHost2Content = App.ServiceProvider!.GetRequiredService<HomeView>();
+        public object HomeHost2Content
+        {
+            get => _homeHost2Content;
+            set { _homeHost2Content = value; OnPropertyChanged(); }
+        }
+        private object _homeHost3Content = App.ServiceProvider!.GetRequiredService<HomeView>();
+        public object HomeHost3Content
+        {
+            get => _homeHost3Content;
+            set { _homeHost3Content = value; OnPropertyChanged(); }
+        }
+        private object _homeHost4Content = App.ServiceProvider!.GetRequiredService<HomeView>();
+        public object HomeHost4Content
+        {
+            get => _homeHost4Content;
+            set { _homeHost4Content = value; OnPropertyChanged(); }
+        }
         private void OnAddRadio()
         {
             int newIndex = 0;
@@ -202,12 +372,6 @@ namespace CadEye_WebVersion.ViewModels
                 HomeViewBtn4Visibility = Visibility.Visible;
                 newIndex = 4;
             }
-            else if (HomeViewBtn5Visibility == Visibility.Collapsed)
-            {
-                HomeViewBtn5Visibility = Visibility.Visible;
-                AddBtnVisibility = Visibility.Collapsed;
-                newIndex = 5;
-            }
 
             if (newIndex > 0)
             {
@@ -218,44 +382,6 @@ namespace CadEye_WebVersion.ViewModels
                 });
             }
         }
-        private int _indexcheck = 0;
-        public int IndexCheck
-        {
-            get => _indexcheck;
-            set
-            {
-                _indexcheck = value;
-                UpdateChecks();
-            }
-        }
-        private void UpdateChecks()
-        {
-            HomeCheck1 = IndexCheck == 1;
-            HomeCheck2 = IndexCheck == 2;
-            HomeCheck3 = IndexCheck == 3;
-            HomeCheck4 = IndexCheck == 4;
-            HomeCheck5 = IndexCheck == 5;
-        }
-        private bool _homeCheck1;
-        public bool HomeCheck1 
-        { get => _homeCheck1; 
-            set { _homeCheck1 = value; OnPropertyChanged(); } }
-        private bool _homeCheck2; 
-        public bool HomeCheck2 
-        { get => _homeCheck2; 
-            set { _homeCheck2 = value; OnPropertyChanged(); } }
-        private bool _homeCheck3;
-        public bool HomeCheck3 
-        { get => _homeCheck3; 
-            set { _homeCheck3 = value; OnPropertyChanged(); } }
-        private bool _homeCheck4; 
-        public bool HomeCheck4
-        { get => _homeCheck4; set 
-            { _homeCheck4 = value; OnPropertyChanged(); } }
-        private bool _homeCheck5; 
-        public bool HomeCheck5 
-        { get => _homeCheck5; 
-            set { _homeCheck5 = value; OnPropertyChanged(); } }
         public void OnCloseHomeView(object? parameter)
         {
             if (parameter == null) return;
@@ -266,110 +392,32 @@ namespace CadEye_WebVersion.ViewModels
                 case 1:
                     NaviName1 = "Home";
                     HomeCheck1 = false;
-                    HomeHost1Content = App.ServiceProvider.GetRequiredService<HomeView>();
+                    HomeHost1Content = App.ServiceProvider!.GetRequiredService<HomeView>();
                     HomeViewBtn1Visibility = Visibility.Collapsed;
                     break;
                 case 2:
                     NaviName2 = "Home";
                     HomeCheck2 = false;
-                    HomeHost2Content = App.ServiceProvider.GetRequiredService<HomeView>();
+                    HomeHost2Content = App.ServiceProvider!.GetRequiredService<HomeView>();
                     HomeViewBtn2Visibility = Visibility.Collapsed;
                     break;
                 case 3:
                     NaviName3 = "Home";
                     HomeCheck3 = false;
-                    HomeHost3Content = App.ServiceProvider.GetRequiredService<HomeView>();
+                    HomeHost3Content = App.ServiceProvider!.GetRequiredService<HomeView>();
                     HomeViewBtn3Visibility = Visibility.Collapsed;
                     break;
                 case 4:
                     NaviName4 = "Home";
                     HomeCheck4 = false;
-                    HomeHost4Content = App.ServiceProvider.GetRequiredService<HomeView>();
+                    HomeHost4Content = App.ServiceProvider!.GetRequiredService<HomeView>();
                     HomeViewBtn4Visibility = Visibility.Collapsed;
-                    break;
-                case 5:
-                    NaviName5 = "Home";
-                    HomeCheck5 = false;
-                    HomeHost5Content = App.ServiceProvider.GetRequiredService<HomeView>();
-                    HomeViewBtn5Visibility = Visibility.Collapsed;
                     break;
             }
 
             AddBtnVisibility = Visibility.Visible;
 
             IndexCheck = 0;
-        }
-        public string _naviname1 = "Home";
-        public string NaviName1
-        {
-            get => _naviname1;
-            set
-            {
-                _naviname1 = value;
-                OnPropertyChanged();
-            }
-        }
-        public string _naviname2 = "Home";
-        public string NaviName2
-        {
-            get => _naviname2;
-            set
-            {
-                _naviname2 = value;
-                OnPropertyChanged();
-            }
-        }
-        public string _naviname3 = "Home";
-        public string NaviName3
-        {
-            get => _naviname3;
-            set
-            {
-                _naviname3 = value;
-                OnPropertyChanged();
-            }
-        }
-        public string _naviname4 = "Home";
-        public string NaviName4
-        {
-            get => _naviname4;
-            set
-            {
-                _naviname4 = value;
-                OnPropertyChanged();
-            }
-        }
-        public string _naviname5 = "Home";
-        public string NaviName5
-        {
-            get => _naviname5;
-            set
-            {
-                _naviname5 = value;
-                OnPropertyChanged();
-            }
-        }
-        public string ActivePage
-        {
-            get
-            {
-                if (HomeCheck1) return NaviName1;
-                if (HomeCheck2) return NaviName2;
-                if (HomeCheck3) return NaviName3;
-                if (HomeCheck4) return NaviName4;
-                if (HomeCheck5) return NaviName5;
-                return null; // 활성화된 페이지 없음
-            }
-        }
-        public string _pagename = "Home";
-        public string Pagename
-        {
-            get => _pagename;
-            set
-            {
-                _pagename = value;
-                RedirectHandler(Pagename);
-            }
         }
         public void RedirectHandler(string pagename)
         {
@@ -381,42 +429,18 @@ namespace CadEye_WebVersion.ViewModels
                 NaviName3 = pagename;
             else if (HomeCheck4)
                 NaviName4 = pagename;
-            else if (HomeCheck5)
-                NaviName5 = pagename;
         }
-        private object _homeHost1Content = App.ServiceProvider.GetRequiredService<HomeView>();
-        public object HomeHost1Content
+        private void UpdateChecks()
         {
-            get => _homeHost1Content;
-            set { _homeHost1Content = value; OnPropertyChanged(); }
+            HomeCheck1 = IndexCheck == 1;
+            HomeCheck2 = IndexCheck == 2;
+            HomeCheck3 = IndexCheck == 3;
+            HomeCheck4 = IndexCheck == 4;
         }
-        private object _homeHost2Content = App.ServiceProvider.GetRequiredService<HomeView>();
-        public object HomeHost2Content
-        {
-            get => _homeHost2Content;
-            set { _homeHost2Content = value; OnPropertyChanged(); }
-        }
-        private object _homeHost3Content = App.ServiceProvider.GetRequiredService<HomeView>();
-        public object HomeHost3Content
-        {
-            get => _homeHost3Content;
-            set { _homeHost3Content = value; OnPropertyChanged(); }
-        }
-        private object _homeHost4Content = App.ServiceProvider.GetRequiredService<HomeView>();
-        public object HomeHost4Content
-        {
-            get => _homeHost4Content;
-            set { _homeHost4Content = value; OnPropertyChanged(); }
-        }
-        private object _homeHost5Content = App.ServiceProvider.GetRequiredService<HomeView>();
-        public object HomeHost5Content
-        {
-            get => _homeHost5Content;
-            set { _homeHost5Content = value; OnPropertyChanged(); }
-        }
-
+        #endregion
 
         // 상태메세지
+        #region StatusMessage
         private string _statusMessage { get; set; } = "Status";
         public string StatusMessage
         {
@@ -427,10 +451,17 @@ namespace CadEye_WebVersion.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
+        private async Task SatatusUpdate(string status)
+        {
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                StatusMessage = status;
+            });
+        }
+        #endregion
 
         // 다크모드, 화이트 모드
+        #region Theme
         private System.Windows.Media.Brush _globalcolor = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#80EEEEEE"));
         private System.Windows.Media.Brush _theme = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#000"));
         private System.Windows.Media.Brush _viewCotainBackGround = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#fff"));
@@ -480,10 +511,10 @@ namespace CadEye_WebVersion.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
+        #endregion
 
         // 프로젝트 네임
+        #region ProjectName
         private string _projectname = "Project Name";
         public string ProjectName
         {
@@ -494,10 +525,10 @@ namespace CadEye_WebVersion.ViewModels
                 OnPropertyChanged();
             }
         }
-
-
+        #endregion
 
         // 트리
+        #region TreeView
         private ObservableCollection<Models.FileTreeNode> _fileList = new ObservableCollection<FileTreeNode>();
         public ObservableCollection<FileTreeNode> FileList
         {
@@ -529,24 +560,19 @@ namespace CadEye_WebVersion.ViewModels
                 }
             }
         }
-
-
+        #endregion
 
         // 폴더 아이콘
+        #region FolderIcon
         private ImageSource _folderIcon = SystemIconProvider.FolderIcon();
         public ImageSource FolderIcon
         {
             get => _folderIcon;
         }
+        #endregion
 
-
-        private async Task SatatusUpdate(string status)
-        {
-            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                StatusMessage = status;
-            });
-        }
+        // 메인 이벤트
+        #region MainEvent
         public async void OnFolderSelected(string path)
         {
             StatusMessage = "Start...";
@@ -570,11 +596,13 @@ namespace CadEye_WebVersion.ViewModels
                 StatusMessage = "Project Name Failure";
                 return;
             }
-
+            dbName = $"{AppSettings.ProjectName}_{dbName}";
             StatusMessage = "Project Name Completed";
 
             // Mongo collection 셋팅
-            var client = new MongoClient("mongodb://localhost:27017");
+            var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
+            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            var client = new MongoClient(settings);
             var database = client.GetDatabase(dbName);
 
             _childFileService.Init(dbName);
@@ -719,10 +747,7 @@ namespace CadEye_WebVersion.ViewModels
 
             StatusMessage = "FileList View Completed";
         }
-
-        public FolderSelect FolderSelecter { get; }
-        public TreeRefresh TreeRefreshHandler { get; }
-        public iFolderService FolderService => _folderService;
+        #endregion
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

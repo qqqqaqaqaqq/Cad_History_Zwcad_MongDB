@@ -3,66 +3,136 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:local="clr-namespace:CadEye_WebVersion.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="600" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!-- 모던 버튼 스타일 -->
+        <Style x:Key="ModernButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Setter Property="BorderBrush" Value="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF007ACC"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FF005A9E"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="Gray"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
-        <Grid
-            x:Name="Navi"
-            VerticalAlignment="Center"
-            HorizontalAlignment="Center"
-            Visibility="{Binding NaviVisiblePage}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="200"/>
-            </Grid.ColumnDefinitions>
+        <Grid Width="500" Height="600">
             <Grid.RowDefinitions>
-                <RowDefinition Height="200"/>
-                <RowDefinition Height="200"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Button
-                x:Name="Informationbtn"
-                Margin="15"
-                Grid.Row="0"
-                Grid.Column="0"
-                Content="Information"
-                Command="{Binding Redirect.RedirectCommand}"
-                CommandParameter="Information"
-                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
-                BorderThickness="1"/>
-            <Button
-                x:Name="Admin"
-                Margin="15"
-                Grid.Row="0"
-                Grid.Column="1"
-                Content="Admin"        
-                Command="{Binding Redirect.RedirectCommand}" 
-                CommandParameter="Admin"
-                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
-                BorderThickness="1"/>
-            <Button
-                x:Name="Cloud"
-                Margin="15"
-                Grid.Row="1"
-                Grid.Column="0"
-                Content="Cloud"         
-                Command="{Binding Redirect.RedirectCommand}"   
-                CommandParameter="Cloud"
-                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
-                BorderThickness="1"/>
-            <Button
-                x:Name="Settingbtn"
-                Margin="15"
-                Grid.Row="1"
-                Grid.Column="1"
-                Content="Setting"        
-                Command="{Binding Redirect.RedirectCommand}"     
-                CommandParameter="Setting"
-                BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
-                BorderThickness="1"/>
+            <!-- 버튼 영역 -->
+            <Grid Grid.Row="0"
+                  x:Name="Navi"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  Visibility="{Binding NaviVisiblePage}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="200"/>
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+
+                <!-- Information 버튼 -->
+                <Button x:Name="Informationbtn"
+                        Margin="15"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Style="{StaticResource ModernButtonStyle}"
+                        Command="{Binding Redirect.RedirectCommand}"
+                        CommandParameter="Information">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="InfoCircle" Width="20" Height="20" Margin="0,0,5,0"
+                                         Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <TextBlock Text="Information"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Admin 버튼 -->
+                <Button x:Name="Admin"
+                        Margin="15"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Style="{StaticResource ModernButtonStyle}"
+                        Command="{Binding Redirect.RedirectCommand}" 
+                        CommandParameter="Admin">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="User" Width="20" Height="20" Margin="0,0,5,0"
+                                         Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <TextBlock Text="Admin"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Cloud 버튼 -->
+                <Button x:Name="Cloud"
+                        Margin="15"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Style="{StaticResource ModernButtonStyle}"
+                        Command="{Binding Redirect.RedirectCommand}"   
+                        CommandParameter="Cloud">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="Cloud" Width="20" Height="20" Margin="0,0,5,0"
+                                         Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <TextBlock Text="Cloud"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Setting 버튼 -->
+                <Button x:Name="Settingbtn"
+                        Margin="15"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Style="{StaticResource ModernButtonStyle}"
+                        Command="{Binding Redirect.RedirectCommand}"     
+                        CommandParameter="Setting">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="Cog" Width="20" Height="20" Margin="0,0,5,0"
+                                         Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <TextBlock Text="Setting"/>
+                    </StackPanel>
+                </Button>
+
+            </Grid>
         </Grid>
-        
+
+        <!-- 페이지 컨텐츠 영역 -->
         <ContentControl
             x:Name="ContentHost"
             Content="{Binding ViewPage}"

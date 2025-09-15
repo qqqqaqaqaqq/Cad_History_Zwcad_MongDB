@@ -20,23 +20,22 @@ namespace CadEye_WebVersion.Commands
             System.Windows.Media.Brush globalColor, theme, viewContainBackground, globalBorderBrush;
             if (parameter == null) { return; }
             string? mode = parameter as string;
+            bool tooggle = false;
             if (mode == "DarkMode")
             {
-                AppSettings.ThemeToggle = true;
+                tooggle = true;
             }
-            else
+            else if (mode == "WhiteMode")
             {
-                AppSettings.ThemeToggle = false;
+                tooggle = false;
             }
 
-            if (AppSettings.ThemeToggle)
+            if (tooggle)
             {
                 globalColor = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF2E2E2E"));
                 theme = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFFFFFFF"));
                 viewContainBackground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF1E1E1E"));
                 globalBorderBrush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF444444"));
-
-                AppSettings.ThemeToggle = !AppSettings.ThemeToggle;
             }
             else
             {
@@ -44,8 +43,6 @@ namespace CadEye_WebVersion.Commands
                 theme = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF000000"));
                 viewContainBackground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFFFFFFF"));
                 globalBorderBrush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFCCCCCC"));
-
-                AppSettings.ThemeToggle = !AppSettings.ThemeToggle;
             }
 
             // 브러시 전송
