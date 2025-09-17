@@ -3,13 +3,12 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.ViewModels.Messages;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-
+using MongoDB.Driver;
 namespace CadEye_WebVersion.Commands
 {
     public class CadEyeLogin
     {
         public AsyncRelayCommand LoginCommand { get; }
-        public AsyncRelayCommand RegisterCommand { get; }
         public readonly IGoogleService _googleService;
         private readonly IUserControlService _userControlService;
 
@@ -19,7 +18,6 @@ namespace CadEye_WebVersion.Commands
             )
         {
             LoginCommand = new AsyncRelayCommand(OnLoginCheck);
-            RegisterCommand = new AsyncRelayCommand(OnRegister);
             _googleService = googleService;
             _userControlService = userControlService;
         }
@@ -28,27 +26,29 @@ namespace CadEye_WebVersion.Commands
         {
             await Task.Run(async () =>
             {
-                string id = await _googleService.GoogleLogin();
-                _userControlService.Init("Users");
-                if (await _userControlService.FindAsync(id) == null)
+                (string subject, string name) = await _googleService.GoogleLogin();
+                if (subject == null || name == null)
                 {
-                    System.Windows.MessageBox.Show("등록되지 않은 사용자입니다. 회원가입을 진행해주세요.");
+                    MessageBox.Show("Login Failed, Please try again.");
+                    return;
                 }
-                else
-                {
-                    var node = await _userControlService.FindAsync(id);
-                    WeakReferenceMessenger.Default.Send(new SendUserName(node.Name));
-                }
-            });
-        }
+                WeakReferenceMessenger.Default.Send(new SendUserName(name!));
 
-        public async Task OnRegister()
-        {
-            await Task.Run(async () =>
-            {
-                var insert_node = await _googleService.GoogleRegister();
-                _userControlService.Init("Users");
-                await _userControlService.AddAsync(insert_node);
+
+                // Mongo User DB 불러오기
+                var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
+                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+                var client = new MongoClient(settings);
+                var dbnamelist = client.ListDatabaseNames().ToList();
+
+                var dbfiltered = dbnamelist
+                    .Where(name => name.Contains($"{subject}_&_"))
+                    .Select(name => name.Replace($"{subject}_&_", ""))
+                    .ToList();
+
+                WeakReferenceMessenger.Default.Send(new SendGoogleId(subject));
+
+                WeakReferenceMessenger.Default.Send(new SendUsersDatabase(dbfiltered));
             });
         }
     }

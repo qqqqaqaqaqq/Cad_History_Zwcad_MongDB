@@ -46,9 +46,9 @@ namespace CadEye_WebVersion.Commands
             }
 
             // 브러시 전송
-            WeakReferenceMessenger.Default.Send(new SendGlobalColor(globalColor));
-            WeakReferenceMessenger.Default.Send(new SendForeGroundBrush(theme));
-            WeakReferenceMessenger.Default.Send(new SendViewContainBackGround(viewContainBackground));
+            WeakReferenceMessenger.Default.Send(new SendGlobalBackgroundColor(globalColor));
+            WeakReferenceMessenger.Default.Send(new SendForeground(theme));
+            WeakReferenceMessenger.Default.Send(new SendGlobalBackgroundColor_View(viewContainBackground));
             WeakReferenceMessenger.Default.Send(new SendGlobalBorderBrush(globalBorderBrush));
         }
     }

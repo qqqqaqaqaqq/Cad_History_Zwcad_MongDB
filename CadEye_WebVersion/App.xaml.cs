@@ -57,6 +57,7 @@ namespace CadEye_WebVersion
             services.AddSingleton<IImageEntryService, MongoDBImageEntry>();
             services.AddSingleton<IRefEntryService, MongoDBRefEntry>();
             services.AddSingleton<IUserControlService, UserControlService>();
+            services.AddSingleton<IProjectPath, MongoDBProjectPath>();
 
             // =====================
             // 기타 서비스
@@ -114,6 +115,7 @@ namespace CadEye_WebVersion
     {
         public static string? MyGoogleId { get; set; }
         public static string? MyGoogleSecrete { get; set; }
+        public static string? UserGoogleId { get; set; }
         public static string? ServerIP { get; set; }
         public static string? ThemeToggle { get; set; }
         public static string? ProjectPath { get; set; }

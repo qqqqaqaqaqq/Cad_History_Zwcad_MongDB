@@ -1,6 +1,7 @@
 ﻿using CadEye_WebVersion.ViewModels.Messages.ThemeBrush;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Diagnostics;
 
 namespace CadEye_WebVersion.Commands
 {

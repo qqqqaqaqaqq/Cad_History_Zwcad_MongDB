@@ -16,8 +16,6 @@
         </Grid.RowDefinitions>
         <Border
             Grid.Row="0"
-            BorderBrush="#e1eaeb"
-            BorderThickness="0.3"
             >
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -54,10 +52,19 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <ListBox
+                <Border
                     Grid.Column="1"
                     Margin="5"
-                    ItemsSource="{Binding Ref}"/>
+                    Background="{Binding DataContext.GlobalBackgroundColor, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                    <ListBox
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
+                        ItemsSource="{Binding Ref}"/>
+                </Border>
             </Grid>
         </Border>
 
@@ -76,21 +83,27 @@
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Border
-                    BorderBrush="#e1eaeb"
+                    BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"    
                     BorderThickness="0.5"
+                    CornerRadius="15"
                     Margin="0,0,0,5">
                     <ContentControl 
-                    Grid.Row="0"
-                    Content="{Binding Host}"/>
+                        Grid.Row="0"
+                        Margin="7.5"
+                        Content="{Binding Host}"/>
                 </Border>
                 <Border
                     Grid.Row="1"
-                    CornerRadius="10"
-                    Background="{Binding DataContext.GlobalColor, RelativeSource={RelativeSource AncestorType=Window}}">
+                    CornerRadius="5"
+                    Background="{Binding DataContext.GlobalBackgroundColor, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderThickness="1">
                     <Button 
-                        Style="{StaticResource TextButtonBase}"
+                        Style="{StaticResource ButtonHover}"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
                         Background="Transparent"
-                        Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                         Content="View"
                         FontWeight="Bold"
                         FontFamily="Segoe UI"
@@ -107,22 +120,27 @@
                     <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Border 
-                    BorderBrush="#e1eaeb"     
+                    BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"    
                     BorderThickness="0.5"
+                    CornerRadius="15"
                     Margin="0,0,0,5">
                     <ContentControl 
                         Grid.Row="0"
+                        Margin="7.5"
                         Content="{Binding HistoryHost}"/>
                 </Border>
                 <Border
                     Grid.Row="1"
-                    CornerRadius="10"
-                    Background="{Binding DataContext.GlobalColor, RelativeSource={RelativeSource AncestorType=Window}}">
+                    CornerRadius="5"
+                    Background="{Binding DataContext.GlobalBackgroundColor, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                    BorderThickness="1">
                     <Button 
-                        Grid.Row="1"
-                        Style="{StaticResource TextButtonBase}"
+                        Style="{StaticResource ButtonHover}"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
                         Background="Transparent"
-                        Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                         FontWeight="Bold"
                         Content="View"
                         Command="{Binding WindoHostCommand.NewCompareWindowHostCommand}"/>

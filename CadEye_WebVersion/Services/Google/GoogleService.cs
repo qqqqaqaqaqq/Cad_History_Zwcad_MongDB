@@ -1,13 +1,13 @@
-﻿using CadEye_WebVersion.Services.Google.Models;
-using Google.Apis.Auth;
+﻿using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
-
+using Google.Apis.Services;
+using System.Diagnostics;
 
 namespace CadEye_WebVersion.Services.Google
 {
     public class GoogleService : IGoogleService
     {
-        public async Task<string> GoogleLogin()
+        public async Task<(string, string)> GoogleLogin()
         {
             string[] scopes = { "email", "profile" };
             string clientId = AppSettings.MyGoogleId!;
@@ -26,43 +26,26 @@ namespace CadEye_WebVersion.Services.Google
                     CancellationToken.None
                 );
 
+                if (credential.Token != null && credential.Token.RefreshToken != null)
+                {
+                    var issued = credential.Token.IssuedUtc;
+                    var expiresIn = credential.Token.ExpiresInSeconds ?? 3600;
+                    var expiry = issued.AddSeconds(expiresIn);
+
+                    if (expiry <= DateTime.UtcNow)
+                    {
+                        await credential.RefreshTokenAsync(CancellationToken.None);
+                    }
+                }
+
                 var payload = await GoogleJsonWebSignature.ValidateAsync(credential.Token.IdToken);
-                return payload.Subject;
+
+                return (payload.Subject, payload.Email);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // 로깅 및 사용자 안내
-                throw new ApplicationException("Google 로그인 실패", ex);
+                return (null, null)!;
             }
-        }
-
-        public async Task<LoginEntity> GoogleRegister()
-        {
-            string[] scopes = { "email", "profile" };
-            string clientId = AppSettings.MyGoogleId!;
-            string clientSecret = AppSettings.MyGoogleSecrete!;
-
-            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-                scopes,
-                "user",
-                CancellationToken.None
-            );
-
-            var payload = await GoogleJsonWebSignature.ValidateAsync(credential.Token.IdToken);
-            string googleId = payload.Subject;
-            string email = payload.Email;
-
-            // DB에 신규 사용자 생성
-            var newUser = new LoginEntity
-            {
-                GoogleId = googleId,
-                Email = email,
-                Name = payload.Name,
-                LoginAt = DateTime.UtcNow
-            };
-
-            return newUser;
         }
     }
 }

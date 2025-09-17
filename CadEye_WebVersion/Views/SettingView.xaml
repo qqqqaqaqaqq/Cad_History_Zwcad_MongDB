@@ -3,39 +3,69 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CadEye_WebVersion.Views"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid
-        Margin="10">
+
+    <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="150"/>
-            <RowDefinition Height="150"/>
+            <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
-        <Grid
-            Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <RadioButton
-                x:Name="DarkMode"
-                Grid.Column="0"
-                Margin="20"
-                Command="{Binding OnThemeToggle.ThemeToggleCommand}"
-                Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
-                CommandParameter="DarkMode"
-                Background="Wheat" 
-                Content="DarkMode"/>
-            <RadioButton
-                x:Name="WhiteMode"
-                Grid.Column="1"
-                Margin="20"
-                Command="{Binding OnThemeToggle.ThemeToggleCommand}"
-                Foreground="{Binding DataContext.Theme, RelativeSource={RelativeSource AncestorType=Window}}"
-                CommandParameter="WhiteMode"
-                Background="Wheat" 
-                Content="WhiteMode"/>
-        </Grid>
+
+        <!-- 라디오버튼 선택 영역 -->
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+
+            <!-- Dark Mode 카드 -->
+            <RadioButton GroupName="ThemeGroup"
+                         Command="{Binding OnThemeToggle.ThemeToggleCommand}"
+                         CommandParameter="DarkMode"
+                         Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}"
+                         Margin="10">
+                <Border Width="150" Height="150"
+                        CornerRadius="12"
+                        BorderThickness="2"
+                        BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Background="#1E1E1E"
+                        Padding="10"
+                        Cursor="Hand">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="MoonOutline" Width="40" Height="40" Foreground="White"/>
+                        <TextBlock Text="Dark Mode"
+                                   Margin="0,10,0,0"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </RadioButton>
+
+            <!-- Light Mode 카드 -->
+            <RadioButton GroupName="ThemeGroup"
+                         Command="{Binding OnThemeToggle.ThemeToggleCommand}"
+                         CommandParameter="WhiteMode"
+                         Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}"
+                         Margin="10">
+                <Border Width="150" Height="150"
+                        CornerRadius="12"
+                        BorderThickness="2"
+                        BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Background="#F5F5F5"
+                        Padding="10"
+                        Cursor="Hand">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="SunOutline" Width="40" Height="40" Foreground="Black"/>
+                        <TextBlock Text="Light Mode"
+                                   Margin="0,10,0,0"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="Black"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </RadioButton>
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -9,7 +9,6 @@ namespace CadEye_WebVersion.Services.Google
 {
     public interface IGoogleService
     {
-        Task<string> GoogleLogin();
-        Task<LoginEntity> GoogleRegister();
+        Task<(string, string)> GoogleLogin();
     }
 }
