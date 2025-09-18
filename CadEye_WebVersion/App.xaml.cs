@@ -60,6 +60,7 @@ namespace CadEye_WebVersion
         }
 
 
+        #region InitializeAsync
         private async Task ShowClosed()
         {
             if (splashDispatcher != null && splashWindow != null)
@@ -93,7 +94,7 @@ namespace CadEye_WebVersion
                 ServiceProvider = services.BuildServiceProvider();
             });
         }
-
+        #endregion
         private void ConfigureServices(IServiceCollection services)
         {
             // =====================
