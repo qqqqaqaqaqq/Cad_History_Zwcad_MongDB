@@ -21,12 +21,13 @@ namespace CadEye_WebVersion
 {
     public partial class App : System.Windows.Application
     {
+        #region field
         public static IServiceProvider? ServiceProvider { get; private set; }
 
         public readonly ThemeToggle themeToggle = new ThemeToggle();
-
         private Window? splashWindow;
         private System.Windows.Threading.Dispatcher? splashDispatcher;
+        #endregion
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -57,6 +58,7 @@ namespace CadEye_WebVersion
                 mainWindow.Show();
             }
         }
+
 
         private async Task ShowClosed()
         {
