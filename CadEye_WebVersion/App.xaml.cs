@@ -29,6 +29,7 @@ namespace CadEye_WebVersion
         private System.Windows.Threading.Dispatcher? splashDispatcher;
         #endregion
 
+        #region Main
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -58,7 +59,7 @@ namespace CadEye_WebVersion
                 mainWindow.Show();
             }
         }
-
+        #endregion
 
         #region InitializeAsync
         private async Task ShowClosed()
@@ -97,6 +98,7 @@ namespace CadEye_WebVersion
         #endregion
         private void ConfigureServices(IServiceCollection services)
         {
+            #region Service
             // =====================
             // MongoDB 관련 서비스
             // =====================
@@ -155,8 +157,11 @@ namespace CadEye_WebVersion
             services.AddTransient<InformationView>();
             services.AddTransient<LoginPageView>();
             services.AddTransient<AdminView>();
+            #endregion
 
+            #region Message
             WeakReferenceMessenger.Default.Send(new SplashMessage($"Service Loading..."));
+            #endregion
         }
     }
     public static class AppSettings
