@@ -19,11 +19,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace CadEye_WebVersion.ViewModels
 {
@@ -480,11 +478,14 @@ namespace CadEye_WebVersion.ViewModels
                         var clickedId = _selectedTreeNode.Id;
 
                         if (_selectedTreeNode != null)
-                            WeakReferenceMessenger.Default.Send(new SelectedTreeNodeMessage(_selectedTreeNode.Id));
+                            WeakReferenceMessenger.Default.Send(new SendObjectId(_selectedTreeNode.Id));
                     }
                 }
             }
         }
+
+        public List<string> dbpath = new List<string>();
+
         public async void SetTreeVeiw(string projectname)
         {
             // Mongo User DB 불러오기
@@ -493,9 +494,7 @@ namespace CadEye_WebVersion.ViewModels
             var client = new MongoClient(settings);
             var dbnamelist = client.ListDatabaseNames().ToList();
 
-     
             var dbfiltered = dbnamelist.Find(x => x.Equals($"{GoogleId}_&_{projectname}"));
-        
 
             if (dbfiltered == null) return;
             string dbName = dbfiltered.Trim().Replace(" ", "_").Replace(".", "_");
@@ -513,6 +512,13 @@ namespace CadEye_WebVersion.ViewModels
             var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
             var node = await _projectPath.NameFindAsync(projectname);
 
+            AppSettings.ProjectPath = node.ProjectFullName;
+
+            if (node == null)
+            {
+                StatusMessage = "No Project Path";
+                return;
+            }
             // TreeView 작성
             try
             {
@@ -586,7 +592,6 @@ namespace CadEye_WebVersion.ViewModels
                 ProjectName = projectname;
             });
 
-            AppSettings.ProjectPath = path;
             string dbName = projectname.Trim().Replace(" ", "_").Replace(".", "_");
 
             if (string.IsNullOrEmpty(dbName))
@@ -621,6 +626,19 @@ namespace CadEye_WebVersion.ViewModels
             var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
             var filtered = new List<ChildFile>();
 
+            // 프로젝트 경로 설정
+            var pathcheck = await _projectPath.NameFindAsync(projectname);
+            if (pathcheck == null)
+            {
+                await _projectPath.AddAsync(new ProjectPath
+                {
+                    ProjectFullName = path,
+                });
+            }
+
+            StatusMessage = "Project Path Set Completed";
+
+
             // 감시 폴더 내 파일 가져오기
             try
             {
@@ -635,10 +653,6 @@ namespace CadEye_WebVersion.ViewModels
                 if (filtered.Count() > 0)
                 {
                     await _childFileService.AddAllAsync(filtered);
-                    await _projectPath.AddAsync(new ProjectPath
-                    {
-                        ProjectFullName = path,
-                    });
                 }
             }
             catch (Exception ex)
@@ -742,6 +756,80 @@ namespace CadEye_WebVersion.ViewModels
         }
         #endregion
 
+        // 진행 중
+        #region Watcher
+        public async Task OnWatcher(string path, string dbName)
+        {
+            // Repository 폴더 셋팅
+            string currentFolder = AppDomain.CurrentDomain.BaseDirectory;
+            string repositoryDwgPath = System.IO.Path.Combine(currentFolder, "repository", dbName);
+            if (!System.IO.Directory.Exists(repositoryDwgPath))
+            {
+                System.IO.Directory.CreateDirectory(repositoryDwgPath);
+            }
+            string repositoryPdfPath = System.IO.Path.Combine(currentFolder, "repository", $"{dbName}_pdf");
+            if (!System.IO.Directory.Exists(repositoryPdfPath))
+            {
+                System.IO.Directory.CreateDirectory(repositoryPdfPath);
+            }
+
+            AppSettings.RepositoryPdfFolder = repositoryPdfPath;
+            AppSettings.RepositoryDwgFolder = repositoryDwgPath;
+
+            // 폴더 존재 여부 체크
+            bool RetrySuccess = false;
+
+            RetrySuccess = await RetryProvider.Retry(() => Directory.Exists(repositoryPdfPath), 100, 100);
+            RetrySuccess = await RetryProvider.Retry(() => Directory.Exists(repositoryDwgPath), 100, 100);
+
+            if (!RetrySuccess)
+            {
+                StatusMessage = "Folder Setting Failure";
+                return;
+            }
+            StatusMessage = "Folder Setting Completed";
+
+            // 파일 와처 셋팅
+            var _watcher = SetWatcher.StartWatcher(ref _watcher_repository_project!, path);
+            try
+            {
+                _projectFolderWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
+            {
+                StatusMessage = "ProjectFolder Monitoring Failure";
+                return;
+            }
+            StatusMessage = "ProjectFolder Monitoring Completed";
+
+            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath);
+            try
+            {
+                _dwgWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
+            {
+                StatusMessage = "Repository folder Monitoring  Failure";
+                return;
+            }
+            StatusMessage = "Repository folder Monitoring  Completed";
+
+            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath);
+            try
+            {
+                _pdfWatcherService.SetupWatcher_repository(_watcher);
+                _watcher.EnableRaisingEvents = true;
+            }
+            catch
+            {
+                StatusMessage = "Repository Pdf Folder Monitoring Failure";
+                return;
+            }
+            StatusMessage = "Repository Pdf Folder Monitoring Completed";
+        }
+        #endregion
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

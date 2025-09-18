@@ -20,7 +20,7 @@ namespace CadEye_WebVersion.Services.Mongo.Services
             var client = new MongoClient(settings);
             var database = client.GetDatabase(dbName);
 
-            var collectionName = "Users";
+            var collectionName = AppSettings.MyGoogleId;
             if (!database.ListCollectionNames().ToList().Contains(collectionName))
                 database.CreateCollection(collectionName);
 

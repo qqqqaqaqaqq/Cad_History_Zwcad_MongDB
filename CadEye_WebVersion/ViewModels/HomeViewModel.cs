@@ -32,17 +32,22 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        public HomeViewModel(InformationViewModel informationViewModel, SettingViewModel settingViewModel)
+        public HomeViewModel(
+            InformationViewModel informationViewModel,
+            SettingViewModel settingViewModel,
+            AdminViewModel adminViewModel)
         {
             Redirect = new RedirectPage();
             Redirect.OnRedirectRequested += OnRedirectPage;
             _informationViewModel = informationViewModel;
             _settingViewModel = settingViewModel;
+            _adminViewModel = adminViewModel;
         }
 
 
         private readonly InformationViewModel _informationViewModel;
         private readonly SettingViewModel _settingViewModel;
+        private readonly AdminViewModel _adminViewModel;
         // 메세지는 전역으로 모든 Host에 영향끼치니 사용 자제
 
         public void OnRedirectPage(string pagenmae)
@@ -54,8 +59,8 @@ namespace CadEye_WebVersion.ViewModels
                     NaviVisiblePage = Visibility.Collapsed;
                     break;
                 case "Admin":
-                    break;
-                case "Cloud":
+                    ViewPage = new AdminView(_adminViewModel);
+                    NaviVisiblePage = Visibility.Collapsed;
                     break;
                 case "Setting":
                     ViewPage = new SettingView(_settingViewModel);

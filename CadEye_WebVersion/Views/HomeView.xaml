@@ -9,23 +9,28 @@
              d:DesignHeight="600" d:DesignWidth="800">
 
     <UserControl.Resources>
-        <!-- 모던 버튼 스타일 -->
-        <Style x:Key="ModernButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
+        <!-- 모던 카드 버튼 스타일 -->
+        <Style x:Key="CardButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{Binding DataContext.GlobalBackgroundColor_View, RelativeSource={RelativeSource AncestorType=Window}}"/>
             <Setter Property="Foreground" Value="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-            <Setter Property="BorderBrush" Value="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Setter Property="BorderBrush" Value="#FFCCCCCC"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Padding" Value="15"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.15"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10"
+                                CornerRadius="15"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"/>
@@ -34,6 +39,11 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#FF007ACC"/>
                                 <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter Property="Background" Value="#FF005A9E"/>
@@ -48,95 +58,69 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid>
-        <Grid Width="500" Height="600">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- 버튼 영역 -->
-            <Grid Grid.Row="0"
-                  x:Name="Navi"
-                  VerticalAlignment="Center"
-                  HorizontalAlignment="Center"
-                  Visibility="{Binding NaviVisiblePage}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200"/>
-                    <ColumnDefinition Width="200"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="200"/>
-                    <RowDefinition Height="200"/>
-                </Grid.RowDefinitions>
+    <Grid Background="Transparent">
+        <Grid VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+              Visibility="{Binding NaviVisiblePage}">
+            <UniformGrid Rows="1" Columns="3" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20" >
 
                 <!-- Information 버튼 -->
                 <Button x:Name="Informationbtn"
-                        Margin="15"
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Style="{StaticResource ModernButtonStyle}"
+                        Style="{StaticResource CardButtonStyle}"
                         Command="{Binding Redirect.RedirectCommand}"
-                        CommandParameter="Information">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <fa:ImageAwesome Icon="InfoCircle" Width="20" Height="20" Margin="0,0,5,0"
+                        CommandParameter="Information"
+                        Height="90"
+                        Margin="10"
+                        Width="150">
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="InfoCircle" Width="24" Margin="0,0,8,0"
                                          Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        <TextBlock Text="Information"/>
+                        <TextBlock 
+                            Text="Information" 
+                            Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
+                            VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Admin 버튼 -->
-                <Button x:Name="Admin"
-                        Margin="15"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Style="{StaticResource ModernButtonStyle}"
+                <Button x:Name="Adminbtn"
+                        Style="{StaticResource CardButtonStyle}"
                         Command="{Binding Redirect.RedirectCommand}" 
-                        CommandParameter="Admin">
+                        CommandParameter="Admin"
+                        Margin="10">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <fa:ImageAwesome Icon="User" Width="20" Height="20" Margin="0,0,5,0"
+                        <fa:ImageAwesome Icon="User" Width="24" Margin="0,0,8,0"
                                          Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        <TextBlock Text="Admin"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Cloud 버튼 -->
-                <Button x:Name="Cloud"
-                        Margin="15"
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Style="{StaticResource ModernButtonStyle}"
-                        Command="{Binding Redirect.RedirectCommand}"   
-                        CommandParameter="Cloud">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <fa:ImageAwesome Icon="Cloud" Width="20" Height="20" Margin="0,0,5,0"
-                                         Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        <TextBlock Text="Cloud"/>
+                        <TextBlock Text="Admin" 
+                                   Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Setting 버튼 -->
                 <Button x:Name="Settingbtn"
-                        Margin="15"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Style="{StaticResource ModernButtonStyle}"
+                        Style="{StaticResource CardButtonStyle}"
                         Command="{Binding Redirect.RedirectCommand}"     
-                        CommandParameter="Setting">
+                        CommandParameter="Setting"
+                        Margin="10">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <fa:ImageAwesome Icon="Cog" Width="20" Height="20" Margin="0,0,5,0"
+                        <fa:ImageAwesome Icon="Cog" Width="24" Margin="0,0,8,0"
                                          Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        <TextBlock Text="Setting"/>
+                        <TextBlock Text="Setting"
+                                   Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-            </Grid>
+            </UniformGrid>
         </Grid>
 
         <!-- 페이지 컨텐츠 영역 -->
-        <ContentControl
-            x:Name="ContentHost"
-            Content="{Binding ViewPage}"
-            HorizontalAlignment="Stretch"     
-            VerticalAlignment="Stretch"/>
+        <ContentControl x:Name="ContentHost"
+                        Content="{Binding ViewPage}"
+                        HorizontalAlignment="Stretch"     
+                        VerticalAlignment="Stretch"/>
     </Grid>
 </UserControl>

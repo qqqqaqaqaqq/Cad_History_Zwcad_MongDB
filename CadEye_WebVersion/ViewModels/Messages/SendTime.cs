@@ -5,8 +5,8 @@ using MongoDB.Bson;
 
 namespace CadEye_WebVersion.ViewModels.Messages
 {
-    public class SelectedTreeNodeMessage : ValueChangedMessage<ObjectId>
+    public class SendTime : ValueChangedMessage<DateTime>
     {
-        public SelectedTreeNodeMessage(ObjectId id) : base(id) { }
+        public SendTime(DateTime time) : base(time) { }
     }
 }

@@ -4,9 +4,9 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.Zwcad;
 using MongoDB.Bson;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace CadEye_WebVersion.Services.FileWatcher.Repository
 {
@@ -19,7 +19,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
 
 
         public RepositoryWatcherService(
-            IEventEntryService eventEntryService, 
+            IEventEntryService eventEntryService,
             IZwcadService zwcadService,
             IRefEntryService refEntryService)
         {
@@ -42,22 +42,38 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
 
         public async Task Brdige_Queue_repository()
         {
+            var semaphore = new SemaphoreSlim(AppSettings.ZwcadThreads);
+            var tasks = new List<Task>();
+
+
             while (true)
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    switch (e.ChangeType)
+                    await semaphore.WaitAsync();
+                    var task = Task.Run(async () =>
                     {
-                        case WatcherChangeTypes.Created:
-                            await Repository(e);
-                            break;
-                    }
-                    await Task.Delay(100);
+                        try
+                        {
+                            switch (e.ChangeType)
+                            {
+                                case WatcherChangeTypes.Created:
+                                    await Repository(e);
+                                    break;
+                            }
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    });
+                    tasks.Add(task);
                 }
                 else
                 {
                     await Task.Delay(100);
                 }
+                tasks.RemoveAll(t => t.IsCompleted);
             }
         }
 
@@ -112,10 +128,8 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
         public async Task RefsInsert(ObjectId objectId, DateTime time, string path)
         {
             var list = new List<string>();
-            lock (_lock)
-            {
-                list = _zwcadService.WorkFlow_Zwcad(path);
-            }
+
+            list = _zwcadService.WorkFlow_Zwcad(path);
 
             var child_node = new List<RefsList>();
 

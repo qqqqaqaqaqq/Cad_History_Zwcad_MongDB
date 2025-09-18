@@ -4,6 +4,7 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.ViewModels.Messages;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MongoDB.Driver;
 using System.IO;
 
 namespace CadEye_WebVersion.Commands
@@ -21,16 +22,30 @@ namespace CadEye_WebVersion.Commands
 
         public async Task OnTreeRefresh()
         {
+
+            // Mongo User DB 불러오기
+            var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
+            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            var client = new MongoClient(settings);
+            var dbnamelist = client.ListDatabaseNames().ToList();
+
+            var dbfiltered = dbnamelist
+                .Where(name => name.Contains($"{AppSettings.UserGoogleId}_&_"))
+                .Select(name => name.Replace($"{AppSettings.UserGoogleId}_&_", ""))
+                .ToList();
+            WeakReferenceMessenger.Default.Send(new SendUsersDatabase(dbfiltered));
+
             var path = AppSettings.ProjectPath;
-            if (path == null) return;
+            if (path != null)
+            {
 
-            var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
+                var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
 
-            var projectname = Path.GetFileName(path);
-            var send = BuildTree.BuildTreeFromFiles(allFiles, path, projectname);
-
-            WeakReferenceMessenger.Default.Send(new SendFileTreeNode(send));
-            WeakReferenceMessenger.Default.Send(new SendStatusMessage("TreeView Refresh Succed"));
+                var projectname = Path.GetFileName(path);
+                var send = BuildTree.BuildTreeFromFiles(allFiles, path, projectname);
+                WeakReferenceMessenger.Default.Send(new SendFileTreeNode(send));
+                WeakReferenceMessenger.Default.Send(new SendStatusMessage("TreeView Refresh Succed"));
+            }
         }
     }
 }

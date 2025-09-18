@@ -78,7 +78,7 @@
     <!-- RadioBtn, Relative -->
     <Style x:Key="RelativeSwitchViewRadio" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-        <Setter Property="FontFamily" Value="{Binding DataCotnext.GlobalFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"/>
+        <Setter Property="FontFamily" Value="{Binding DataContext.GlobalFontFamily, RelativeSource={RelativeSource AncestorType=Window}}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>

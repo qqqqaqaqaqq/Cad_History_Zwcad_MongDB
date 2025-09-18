@@ -6,6 +6,7 @@ using MongoDB.Bson;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
 {
@@ -35,27 +36,46 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
 
         public async Task Brdige_Queue_repository()
         {
+            var semaphore = new SemaphoreSlim(AppSettings.PDFTasks); 
+            var tasks = new List<Task>();
+
             while (true)
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    if (Path.GetExtension(e.FullPath).ToUpper() == ".LOG") continue;
-                    switch (e.ChangeType)
+                    await semaphore.WaitAsync();
+                    var task = Task.Run(async () =>
                     {
-                        case WatcherChangeTypes.Created:
-                            Repository(e);
-                            break;
-                    }
-                    await Task.Delay(100);
+                        try
+                        {
+                            if (Path.GetExtension(e.FullPath).ToUpper() == ".PDF")
+                            {
+                                switch (e.ChangeType)
+                                {
+                                    case WatcherChangeTypes.Created:
+                                        await Repository(e);
+                                        break;
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    });
+
+                    tasks.Add(task);
                 }
                 else
                 {
                     await Task.Delay(100);
                 }
+
+                tasks.RemoveAll(t => t.IsCompleted);
             }
         }
 
-        private async void Repository(FileSystemEventArgs e)
+        private async Task Repository(FileSystemEventArgs e)
         {
             bool ReadFile = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100);
 

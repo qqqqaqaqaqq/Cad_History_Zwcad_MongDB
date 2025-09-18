@@ -47,7 +47,6 @@ namespace CadEye_WebVersion.Commands
                     .ToList();
 
                 WeakReferenceMessenger.Default.Send(new SendGoogleId(subject));
-
                 WeakReferenceMessenger.Default.Send(new SendUsersDatabase(dbfiltered));
             });
         }

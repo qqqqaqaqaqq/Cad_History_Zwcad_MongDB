@@ -1,13 +1,84 @@
-﻿using System.Diagnostics;
+﻿using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
+using CadEye_WebVersion.Views;
+using CommunityToolkit.Mvvm.Messaging;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
 using ZWCAD;
+
 
 namespace CadEye_WebVersion.Services.Zwcad
 {
     public class ZwcadService : IZwcadService
     {
+        public ZwcadService()
+        {
+            CreateInitialInstances();
+            StartMonitoring();
+        }
+
+
+        public Dictionary<ZcadApplication, bool> Zwcads = new Dictionary<ZcadApplication, bool>();
+
+        #region Zwcad 생성 및 감시
+        private void CreateInitialInstances()
+        {
+            lock (_lock)
+            {
+                try
+                {
+
+                    for (int i = 0; i < AppSettings.ZwcadThreads; i++)
+                    {
+                        ZcadApplication _zwcad = new ZcadApplication();
+                        _zwcad.Visible = false;
+                        Zwcads.Add(_zwcad, false);
+                        WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"ZWCAD Instance 생성 실패: {ex.Message}");
+                }
+            }
+        }
+
+        private void StartMonitoring()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    lock (_lock)
+                    {
+                        int runningCount = Process.GetProcessesByName("ZWCAD").Length;
+                        int toCreate = AppSettings.ZwcadThreads - runningCount;
+
+                        for (int i = 0; i < toCreate; i++)
+                        {
+                            try
+                            {
+                                ZcadApplication _zwcad = new ZcadApplication();
+                                _zwcad.Visible = false;
+                                Zwcads.Add(_zwcad, false);
+                                WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad Instance Created by Monitor"));
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"ZWCAD Monitoring 생성 실패: {ex.Message}");
+                            }
+                        }
+                    }
+                    await Task.Delay(500); 
+                }
+            });
+        }
+
+
+        #endregion
+
+        private object _lock = new object();
         public List<string> WorkFlow_Zwcad(string path)
         {
             try
@@ -15,10 +86,41 @@ namespace CadEye_WebVersion.Services.Zwcad
                 List<string> sender = new List<string>();
                 Thread staThread = new Thread(() =>
                 {
-                    ZcadApplication _zwcad = new ZcadApplication();
-                    _zwcad.Visible = false;
-                    sender = Cad_Text_Extrude(path, _zwcad);
-                    Zwcad_Shutdown(_zwcad);
+                    ZcadApplication assigned = null;
+
+                    lock (_lock)
+                    {
+                        foreach (var zwcad in Zwcads)
+                        {
+                            if (!zwcad.Value)
+                            {
+                                Zwcads[zwcad.Key] = true;
+                                assigned = zwcad.Key;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (assigned != null)
+                    {
+                        assigned.Visible = false;
+
+                        try
+                        {
+                            sender = Cad_Text_Extrude(path, assigned);
+                        }
+                        finally
+                        {
+                            lock (_lock)
+                            {
+                                Zwcads[assigned] = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("사용 가능한 ZWCAD 인스턴스 없음");
+                    }
                 });
                 staThread.SetApartmentState(ApartmentState.STA);
                 staThread.Start();
@@ -29,36 +131,6 @@ namespace CadEye_WebVersion.Services.Zwcad
             {
                 return new List<string>();
             }
-        }
-
-        public bool Zwcad_Shutdown(ZcadApplication _zwcad)
-        {
-            if (_zwcad != null)
-            {
-                try
-                {
-                    foreach (ZWCAD.ZcadDocument doc in _zwcad.Documents)
-                    {
-                        try
-                        {
-                            Marshal.FinalReleaseComObject(doc.ModelSpace);
-                            Marshal.FinalReleaseComObject(doc.Layouts);
-                            Marshal.FinalReleaseComObject(doc.Plot);
-                            Marshal.FinalReleaseComObject(doc);
-                        }
-                        catch { }
-                    }
-
-                    Marshal.FinalReleaseComObject(_zwcad.Documents);
-
-                    _zwcad.Quit();
-                    Marshal.FinalReleaseComObject(_zwcad);
-                }
-                catch { }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            return true;
         }
 
         public List<string> Cad_Text_Extrude(string path, ZcadApplication _zwcad)
@@ -81,8 +153,10 @@ namespace CadEye_WebVersion.Services.Zwcad
 
                 if (layouts == null) { return new List<string>(); }
 
+
                 Plot_Check(layouts);
-                string PlotPaht = System.IO.Path.Combine(AppSettings.RepositoryPdfFolder, System.IO.Path.GetFileName(path)); 
+
+                string PlotPaht = System.IO.Path.Combine(AppSettings.RepositoryPdfFolder, System.IO.Path.GetFileName(path));
                 zwcad_in.Plot.PlotToFile(PlotPaht);
 
                 var buffer1 = new ConcurrentBag<string>();

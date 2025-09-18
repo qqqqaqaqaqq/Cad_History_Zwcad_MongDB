@@ -216,11 +216,17 @@
                                 <Border
                                     BorderBrush="{Binding GlobalBorderBrush}"
                                     Visibility="{Binding AddNaviVisibility}"
-                                    BorderThickness="1"
+                                    BorderThickness="0,0,0,1"
                                     Width="100"
-                                    CornerRadius="5"
-                                    Margin="5">
-                                    <Button 
+>
+                                    <Border
+                                        BorderBrush="{Binding GlobalBorderBrush}"
+                                        Visibility="{Binding AddNaviVisibility}"                        
+                                        CornerRadius="5"
+                                        BorderThickness="1">
+                                        <Button 
+
+                                        Margin="5"
                                         Content="+"
                                         FontFamily="{Binding GlobalFontFamily}"
                                         FontSize="40"
@@ -229,7 +235,8 @@
                                         Style="{StaticResource CommonBtnStyle}"
                                         Command="{Binding AddNaviCommand}"
                                         Background="Transparent">
-                                    </Button>
+                                        </Button>
+                                    </Border>
                                 </Border>
                                 <Border
                                     Width="3000"

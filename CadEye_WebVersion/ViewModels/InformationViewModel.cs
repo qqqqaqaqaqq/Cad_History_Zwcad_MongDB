@@ -15,8 +15,10 @@ namespace CadEye_WebVersion.ViewModels
 {
     public class InformationViewModel : INotifyPropertyChanged
     {
+        #region Init Fields
         private ObservableCollection<EventList> _informationEvent = new ObservableCollection<EventList>();
         private ObservableCollection<string> _refs = new ObservableCollection<string>();
+        public CellEditEnding CellEdit { get; }
         public EventList? _selectedEventEntry;
         private WindowsFormsHost? _host;
         private WindowsFormsHost? _historyhost;
@@ -28,7 +30,9 @@ namespace CadEye_WebVersion.ViewModels
         private byte[]? _pdfbyte;
         private byte[]? _comparebyte;
         private ObjectId _id;
+        #endregion
 
+        #region Properties 
         public ObjectId Id
         {
             get => _id;
@@ -67,8 +71,11 @@ namespace CadEye_WebVersion.ViewModels
                 _selectedEventEntry = value;
                 OnPropertyChanged();
 
-                if (_selectedEventEntry != null)
-                    EventHistoryView(_selectedEventEntry.Time);
+                if (SelectedEventEntry != null)
+                {
+                    EventHistoryView(SelectedEventEntry.Time);
+                    WeakReferenceMessenger.Default.Send(new SendTime(SelectedEventEntry.Time));
+                }
             }
         }
 
@@ -118,7 +125,8 @@ namespace CadEye_WebVersion.ViewModels
                     WeakReferenceMessenger.Default.Send(new SendCompareByteMessage(_comparebyte));
             }
         }
-
+        #endregion
+        
         public InformationViewModel(
             IEventEntryService eventEntryService,
             IImageEntryService imageEntryService,
@@ -126,16 +134,22 @@ namespace CadEye_WebVersion.ViewModels
             IWindowsService windowsService,
             IRefEntryService refEntryService)
         {
+            #region Fields
             _eventEntryService = eventEntryService;
             _imageEntryService = imageEntryService;
             _windowsService = windowsService;
             _pdfService = pdfService;
             _refEntryService = refEntryService;
+            CellEdit = new CellEditEnding(eventEntryService);
             WindoHostCommand = new NewWindowHost(_windowsService, pdfService, OpenWindowForm);
-            WeakReferenceMessenger.Default.Register<SelectedTreeNodeMessage>(this, async (r, m) =>
+            #endregion
+
+            #region Message
+            WeakReferenceMessenger.Default.Register<SendObjectId>(this, async (r, m) =>
             {
                 await SelectItemEvent(m.Value);
             });
+            #endregion
         }
 
         private async void EventHistoryView(DateTime time)
@@ -230,7 +244,7 @@ namespace CadEye_WebVersion.ViewModels
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 Host = null;
-                HistoryHost = null; 
+                HistoryHost = null;
                 if (host != null)
                 {
                     Host = host;
