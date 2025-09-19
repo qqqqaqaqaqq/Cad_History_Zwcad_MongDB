@@ -4,9 +4,9 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.PDF;
 using MongoDB.Bson;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 
 namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
 {
@@ -34,17 +34,15 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
             eventQueue_repository.Enqueue(e);
         }
 
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.PDFTasks - 2);
         public async Task Brdige_Queue_repository()
         {
-            var semaphore = new SemaphoreSlim(AppSettings.PDFTasks); 
-            var tasks = new List<Task>();
-
             while (true)
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    await semaphore.WaitAsync();
-                    var task = Task.Run(async () =>
+                    await _semaphore.WaitAsync();
+                    _ = Task.Run(async () =>
                     {
                         try
                         {
@@ -58,20 +56,20 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
                                 }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"예외 발생: {ex}");
+                        }
                         finally
                         {
-                            semaphore.Release();
+                            _semaphore.Release(); // 반드시 슬롯 반환
                         }
                     });
-
-                    tasks.Add(task);
                 }
                 else
                 {
                     await Task.Delay(100);
                 }
-
-                tasks.RemoveAll(t => t.IsCompleted);
             }
         }
 

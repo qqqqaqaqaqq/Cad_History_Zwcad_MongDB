@@ -1,4 +1,5 @@
-﻿using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
+﻿using CadEye_WebVersion.Infrastructure.Utils;
+using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
 using CadEye_WebVersion.Views;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.Concurrent;
@@ -24,23 +25,22 @@ namespace CadEye_WebVersion.Services.Zwcad
         #region Zwcad 생성 및 감시
         private void CreateInitialInstances()
         {
-            lock (_lock)
+            try
             {
-                try
+                for (int i = 0; i < AppSettings.ZwcadThreads - 2; i++)
                 {
+                    WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
 
-                    for (int i = 0; i < AppSettings.ZwcadThreads; i++)
-                    {
-                        ZcadApplication _zwcad = new ZcadApplication();
-                        _zwcad.Visible = false;
-                        Zwcads.Add(_zwcad, false);
-                        WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
-                    }
+                    ZcadApplication _zwcad = new ZcadApplication();
+                    _zwcad.Visible = false;
+                    Zwcads.Add(_zwcad, false);
+
+                    WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"ZWCAD Instance 생성 실패: {ex.Message}");
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ZWCAD Instance 생성 실패: {ex.Message}");
             }
         }
 
@@ -70,7 +70,7 @@ namespace CadEye_WebVersion.Services.Zwcad
                             }
                         }
                     }
-                    await Task.Delay(500); 
+                    await Task.Delay(500);
                 }
             });
         }
@@ -90,36 +90,36 @@ namespace CadEye_WebVersion.Services.Zwcad
 
                     lock (_lock)
                     {
-                        foreach (var zwcad in Zwcads)
+                        while (true)
                         {
-                            if (!zwcad.Value)
+                            foreach (var zwcad in Zwcads)
                             {
-                                Zwcads[zwcad.Key] = true;
-                                assigned = zwcad.Key;
+                                if (!zwcad.Value)
+                                {
+                                    Zwcads[zwcad.Key] = true;
+                                    assigned = zwcad.Key;
+                                    break;
+                                }
+                            }
+                            if (assigned != null)
                                 break;
-                            }
                         }
                     }
 
-                    if (assigned != null)
-                    {
-                        assigned.Visible = false;
 
-                        try
-                        {
-                            sender = Cad_Text_Extrude(path, assigned);
-                        }
-                        finally
-                        {
-                            lock (_lock)
-                            {
-                                Zwcads[assigned] = false;
-                            }
-                        }
-                    }
-                    else
+                    assigned.Visible = false;
+
+                    try
                     {
-                        Debug.WriteLine("사용 가능한 ZWCAD 인스턴스 없음");
+                        sender = Cad_Text_Extrude(path, assigned);
+                    }
+                    finally
+                    {
+                        lock (_lock)
+                        {
+                            Zwcads[assigned] = false;
+                            Debug.WriteLine("해제");
+                        }
                     }
                 });
                 staThread.SetApartmentState(ApartmentState.STA);
@@ -196,8 +196,6 @@ namespace CadEye_WebVersion.Services.Zwcad
 
                 zwcad_in.Close();
                 Marshal.FinalReleaseComObject(zwcad_in);
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
 
                 return autocad_text;
 
@@ -209,6 +207,7 @@ namespace CadEye_WebVersion.Services.Zwcad
                 return new List<string>();
             }
         }
+
         public void Plot_Check(ZcadLayouts layouts)
         {
             try

@@ -1,0 +1,51 @@
+﻿<Window x:Class="CadEye_WebVersion.Views.EnvCreateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:h="clr-namespace:CadEye_WebVersion.Commands.Helper"
+        Title="Login" Height="250" Width="450" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- MongoDB Key -->
+        <Label Content="MongoDB Key:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox x:Name="MongoDbKeyTextBox" Grid.Row="0" Grid.Column="1" Height="25" Margin="5"/>
+
+        <!-- Google OAuth ID -->
+        <Label Content="Google OAuth ID:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox x:Name="GoogleOAuthIdTextBox" Grid.Row="2" Grid.Column="1" Height="25" Margin="5"/>
+
+        <!-- Google OAuth Secret -->
+        <Label Content="Google OAuth Secret:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+        <TextBox x:Name="GoogleOAuthSecretTextBox" Grid.Row="4" Grid.Column="1" Height="25" Margin="5"/>
+
+        <!-- Save Button -->
+        <Button Content="Save" Grid.Row="6" Grid.Column="1" Width="100" Height="30" HorizontalAlignment="Right"
+        Margin="5"
+        Command="{Binding KeySenderCommand}">
+            <Button.CommandParameter>
+                <MultiBinding>
+                    <Binding ElementName="MongoDbKeyTextBox" Path="Text"/>
+                    <Binding ElementName="GoogleOAuthIdTextBox" Path="Text"/>
+                    <Binding ElementName="GoogleOAuthSecretTextBox" Path="Text"/>
+                    <Binding RelativeSource="{RelativeSource AncestorType=Window}" />
+                    <MultiBinding.Converter>
+                        <h:LoginParameterConverter />
+                    </MultiBinding.Converter>
+                </MultiBinding>
+            </Button.CommandParameter>
+        </Button>
+    </Grid>
+</Window>

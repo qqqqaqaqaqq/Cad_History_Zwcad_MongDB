@@ -1,21 +1,22 @@
 ﻿using CadEye_WebVersion.Commands;
+using CadEye_WebVersion.Infrastructure.Utils;
 using CadEye_WebVersion.Services.FileWatcher.ProjectFolder;
 using CadEye_WebVersion.Services.FileWatcher.Repository;
 using CadEye_WebVersion.Services.FileWatcher.RepositoryPdf;
 using CadEye_WebVersion.Services.FolderService;
+using CadEye_WebVersion.Services.Google;
 using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.Services.Mongo.Services;
 using CadEye_WebVersion.Services.PDF;
 using CadEye_WebVersion.Services.WindowService;
 using CadEye_WebVersion.Services.Zwcad;
 using CadEye_WebVersion.ViewModels;
+using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
 using CadEye_WebVersion.Views;
-using CadEye_WebVersion.Services.Google;
+using CommunityToolkit.Mvvm.Messaging;
+using DotNetEnv;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using CommunityToolkit.Mvvm.Messaging;
-using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
-using DotNetEnv;
 
 namespace CadEye_WebVersion
 {
@@ -27,12 +28,24 @@ namespace CadEye_WebVersion
         public readonly ThemeToggle themeToggle = new ThemeToggle();
         private Window? splashWindow;
         private System.Windows.Threading.Dispatcher? splashDispatcher;
+        private Window? EnvWindow;
         #endregion
 
         #region Main
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+            string envPath = System.IO.Path.Combine(basePath, ".env");
+            bool ReadFile = await RetryProvider.RetryAsync(() => Task.FromResult(System.IO.File.Exists(envPath)), 100, 100);
+            if (!ReadFile)
+            {
+                EnvWindow = new EnvCreateWindow();
+                EnvWindow.ShowDialog();
+            }
+
+            await ReadEnv();
 
             var thread = new Thread(() =>
             {
@@ -52,11 +65,10 @@ namespace CadEye_WebVersion
                 var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
                 AppSettings.ThemeToggle = "DarkMode";
                 themeToggle.OnThemeToggle(AppSettings.ThemeToggle);
-      
+
                 WeakReferenceMessenger.Default.Send(new SplashMessage($"All Completed"));
-                Thread.Sleep(1000);
+                mainWindow.Show(); 
                 await ShowClosed();
-                mainWindow.Show();
             }
         }
         #endregion
@@ -74,28 +86,56 @@ namespace CadEye_WebVersion
             }
         }
 
-        private async Task InitializeAsync()
+        private async Task ReadEnv()
         {
-            AppSettings.ZwcadThreads = 4;
-            AppSettings.PDFTasks = 4;
             await Task.Run(() =>
             {
+                string basePath = AppDomain.CurrentDomain.BaseDirectory;
+                string envPath = System.IO.Path.Combine(basePath, ".env");
 
-                Env.Load(@"C:\Users\Hong\Desktop\CadEye_WebVersion\CadEye_WebVersion\.env"); // 이후 수정할 것.
+                Env.Load(envPath);
                 string connectionString = Env.GetString("MONGO_URI");
                 string mygoogleId = Env.GetString("GOOGLE_ID");
                 string mygoogleSecrete = Env.GetString("GOOGLE_SECRETE");
 
+                if (string.IsNullOrEmpty(mygoogleId) || string.IsNullOrEmpty(mygoogleSecrete))
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var result = System.Windows.MessageBox.Show(
+                            "Env 로드 실패",
+                            "알림",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+
+                        if (result == MessageBoxResult.OK)
+                        {
+                            System.Windows.Application.Current.Shutdown();
+                        }
+                    });
+
+                    return;
+                }
                 AppSettings.ServerIP = connectionString;
                 AppSettings.MyGoogleId = mygoogleId;
                 AppSettings.MyGoogleSecrete = mygoogleSecrete;
+            });
+        }
 
+        private async Task InitializeAsync()
+        {
+            AppSettings.ZwcadThreads = 6; // 안전을 위해 기존 대비 2개추가 thread는 4개만돌아가도록
+            AppSettings.PDFTasks = 6;
+            await Task.Run(() =>
+            {
                 var services = new ServiceCollection();
                 ConfigureServices(services);
                 ServiceProvider = services.BuildServiceProvider();
             });
         }
-        #endregion
+
+
         private void ConfigureServices(IServiceCollection services)
         {
             #region Service
@@ -163,7 +203,10 @@ namespace CadEye_WebVersion
             WeakReferenceMessenger.Default.Send(new SplashMessage($"Service Loading..."));
             #endregion
         }
+
+        #endregion
     }
+
     public static class AppSettings
     {
         public static int ZwcadThreads { get; set; }

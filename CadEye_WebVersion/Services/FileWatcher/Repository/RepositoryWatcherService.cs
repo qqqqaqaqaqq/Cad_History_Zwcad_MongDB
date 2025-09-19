@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 
 namespace CadEye_WebVersion.Services.FileWatcher.Repository
 {
@@ -40,21 +41,21 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
             eventQueue_repository.Enqueue(e);
         }
 
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.ZwcadThreads - 2);
         public async Task Brdige_Queue_repository()
         {
-            var semaphore = new SemaphoreSlim(AppSettings.ZwcadThreads);
-            var tasks = new List<Task>();
-
-
             while (true)
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    await semaphore.WaitAsync();
-                    var task = Task.Run(async () =>
+                    await _semaphore.WaitAsync(); 
+
+                    _ = Task.Run(async () =>
                     {
                         try
                         {
+                            Debug.WriteLine($"처리 시작: {e.ChangeType}");
+
                             switch (e.ChangeType)
                             {
                                 case WatcherChangeTypes.Created:
@@ -62,22 +63,24 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
                                     break;
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"예외 발생: {ex}");
+                        }
                         finally
                         {
-                            semaphore.Release();
+                            _semaphore.Release(); // 반드시 슬롯 반환
                         }
                     });
-                    tasks.Add(task);
                 }
                 else
                 {
+                    // 큐가 비어있으면 잠깐 대기
                     await Task.Delay(100);
                 }
-                tasks.RemoveAll(t => t.IsCompleted);
             }
         }
 
-        private readonly object _lock = new object();
         private async Task Repository(FileSystemEventArgs e)
         {
             bool ReadFile = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100);
@@ -87,6 +90,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
             string _event = parts[1];
             string _time = parts[2];
             string _description = parts[3];
+
             if (string.IsNullOrEmpty(_description)) _description = "";
 
             ObjectId objectId = ObjectId.Parse(_id);

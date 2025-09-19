@@ -6,13 +6,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using MongoDB.Bson;
+using FileWatcherEx;
 
 namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
 {
     public class ProjectFolderWatcherService : IProjectFolderWatcherService
     {
-        private ConcurrentQueue<FileSystemEventArgs> eventQueue_repository = new ConcurrentQueue<FileSystemEventArgs>();
+        private ConcurrentQueue<FileChangedEvent> eventQueue_repository = new ConcurrentQueue<FileChangedEvent>();
         private readonly IChildFileService _childFileService;
 
         public ProjectFolderWatcherService(
@@ -21,9 +21,9 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
             _childFileService = childFileService;
         }
 
-        private readonly Subject<FileSystemEventArgs> _subject = new Subject<FileSystemEventArgs>();
+        private readonly Subject<FileWatcherEx.FileChangedEvent> _subject = new Subject<FileChangedEvent>();
 
-        public void SetupWatcher_repository(FileSystemWatcher _watcher)
+        public void SetupWatcher_repository(FileSystemWatcherEx _watcher)
         {
             Task.Run(Brdige_Queue_repository);
             _subject
@@ -32,12 +32,12 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                     eventQueue_repository.Enqueue(evt);
                 });
 
-            _watcher.Created += (s, e) => _subject.OnNext(e);
-            _watcher.Changed += (s, e) => _subject.OnNext(e);
-            _watcher.Deleted += (s, e) => _subject.OnNext(e);
-            _watcher.Renamed += (s, e) => _subject.OnNext(e);
+            _watcher.OnCreated += (s, e) => _subject.OnNext(e);
+            _watcher.OnChanged += (s, e) => _subject.OnNext(e);
+            _watcher.OnDeleted += (s, e) => _subject.OnNext(e);
+            _watcher.OnRenamed += (s, e) => _subject.OnNext(e);
 
-            _watcher.EnableRaisingEvents = true;
+            _watcher.Start();
         }
 
         public async Task Brdige_Queue_repository()
@@ -46,7 +46,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
             {
                 if (eventQueue_repository.TryDequeue(out var e))
                 {
-                    if (!await ExtFilterProvider.ExtFilter(e.FullPath)) continue; // 확장자 필터
+                    if (!await ExtFilterProvider.ExtFilter(e.FullPath)) continue;
 
                     var Event = e.ChangeType;
                     string target = string.Empty;
@@ -54,21 +54,20 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                     var original_node = new ChildFile();
                     string Description = string.Empty;
 
-                    Debug.WriteLine(e.FullPath);
-                    if (await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100)) // 파일 읽을 수 있는지?
+                    if (await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100))
                     {
                         var fileinfo = new FileInfo(e.FullPath);
                         var hash = await FileHashProvider.Hash_Allocated_Unique(e.FullPath);
                         switch (Event)
                         {
-                            case WatcherChangeTypes.Created:
+                            case ChangeType.CREATED:
                                 source_node.File_FullName = e.FullPath;
                                 source_node.File_Name = Path.GetFileName(e.FullPath);
                                 source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
                                 source_node.HashToken = hash;
-                                await _childFileService.AddAsync(source_node);
+                                await _childFileService.AddOrUpdateAsync(source_node);
                                 break;
-                            case WatcherChangeTypes.Changed:
+                            case ChangeType.CHANGED:
                                 original_node = await _childFileService.NameFindAsync(e.FullPath);
                                 source_node.Id = original_node.Id;
                                 source_node.File_FullName = e.FullPath;
@@ -77,21 +76,23 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                                 source_node.HashToken = hash;
                                 await _childFileService.AddOrUpdateAsync(source_node);
                                 break;
-                            case WatcherChangeTypes.Renamed:
-                                RenamedEventArgs re = e as RenamedEventArgs;
-                                if (re == null) break;
+                            case ChangeType.RENAMED:
+                                var re = e;
+                                if (string.IsNullOrEmpty(re.OldFullPath)) break;
                                 original_node = await _childFileService.NameFindAsync(re.OldFullPath);
+                                if (original_node == null) break;
                                 source_node.Id = original_node.Id;
-                                source_node.File_FullName = e.FullPath;
-                                source_node.File_Name = Path.GetFileName(e.FullPath);
-                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                                source_node.File_FullName = re.FullPath;
+                                source_node.File_Name = Path.GetFileName(re.FullPath);
+                                source_node.File_Directory = Path.GetDirectoryName(re.FullPath) ?? "";
                                 source_node.HashToken = hash;
-                                Description = $"{Path.GetFileName(re.OldFullPath)}";
+                                Description = $"Renamed from {Path.GetFileName(re.OldFullPath)} to {source_node.File_Name}";
                                 await _childFileService.AddOrUpdateAsync(source_node);
                                 break;
-                            case WatcherChangeTypes.Deleted:
+                            case ChangeType.DELETED:
                                 continue;
                         }
+
                         var chknode = await _childFileService.NameFindAsync(e.FullPath);
                         target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_{Description}.dwg";
                         target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
@@ -103,7 +104,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                         target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_.dwg";
                         target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
                         await RetryProvider.RetryAsync(() =>
-                        { 
+                        {
                             using var fs = File.Create(target);
                             return Task.FromResult(true);
                         }

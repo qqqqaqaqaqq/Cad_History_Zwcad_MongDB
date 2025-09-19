@@ -145,11 +145,16 @@
             <Border.Effect>
                 <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.2"/>
             </Border.Effect>
-            <StackPanel>
-                <TextBlock Text="Connected Users" FontWeight="Bold" FontSize="18" 
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Connected Users" FontWeight="Bold" FontSize="18" 
                            Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                            Margin="0,0,0,10"/>
-                <DataGrid ItemsSource="{Binding ConnectUser}" 
+                    <DataGrid ItemsSource="{Binding ConnectUser}" 
                           AutoGenerateColumns="False" 
                           CanUserAddRows="False"
                           Style="{StaticResource Data_Gaid_Background}"
@@ -157,13 +162,32 @@
                           CellStyle="{StaticResource Data_Grid_Cell}"
                           GridLinesVisibility="None"
                           BorderThickness="0" HeadersVisibility="Column">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name" Binding="{Binding name}" Width="*" />
-                        <DataGridTextColumn Header="Role" Binding="{Binding role}" Width="120" />
-                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding isActive}" Width="80"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </StackPanel>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding name}" Width="*" />
+                            <DataGridTextColumn Header="Role" Binding="{Binding role}" Width="120" />
+                            <DataGridCheckBoxColumn Header="Active" Binding="{Binding isActive}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="Wathcer Folder" FontWeight="Bold" FontSize="18" 
+                          Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
+                          Margin="0,0,0,10"/>
+                    <DataGrid ItemsSource="{Binding ConnectUser}" 
+                         AutoGenerateColumns="False" 
+                         CanUserAddRows="False"
+                         Style="{StaticResource Data_Gaid_Background}"
+                         ColumnHeaderStyle="{StaticResource Data_Grid_ColumnHeader}"
+                         CellStyle="{StaticResource Data_Grid_Cell}"
+                         GridLinesVisibility="None"
+                         BorderThickness="0" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Path}" Width="*" />
+                            <DataGridCheckBoxColumn  Header="Role" Binding="{Binding Check}" Width="120" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

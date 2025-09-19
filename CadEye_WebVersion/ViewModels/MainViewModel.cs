@@ -22,6 +22,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
+using FileWatcherEx;
 
 namespace CadEye_WebVersion.ViewModels
 {
@@ -171,7 +172,7 @@ namespace CadEye_WebVersion.ViewModels
         public readonly IRepositoryWatcherService _dwgWatcherService;
         public readonly IPdfService _pdfService;
         public readonly IProjectPath _projectPath;
-        public FileSystemWatcher? _watcher_repository_project;
+        public FileSystemWatcherEx? _watcher_repository_project;
         public FileSystemWatcher? _watcher_repository_dwg;
         public FileSystemWatcher? _watcher_repository_pdf;
         public FolderSelect FolderSelecter { get; }
@@ -580,6 +581,7 @@ namespace CadEye_WebVersion.ViewModels
         {
             StatusMessage = "Start...";
 
+
             // 프로젝트 네임 셋팅
             string projectname = System.IO.Path.GetFileName(path);
             if (string.IsNullOrEmpty(projectname))
@@ -693,11 +695,11 @@ namespace CadEye_WebVersion.ViewModels
             StatusMessage = "Folder Setting Completed";
 
             // 파일 와처 셋팅
-            var _watcher = SetWatcher.StartWatcher(ref _watcher_repository_project!, path);
+
+            var _watcher = new FileSystemWatcherEx(path);
             try
             {
                 _projectFolderWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
             }
             catch
             {
@@ -706,11 +708,11 @@ namespace CadEye_WebVersion.ViewModels
             }
             StatusMessage = "ProjectFolder Monitoring Completed";
 
-            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath);
+            var _dwg_watcher = SetWatcher.StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath);
             try
             {
-                _dwgWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
+                _dwgWatcherService.SetupWatcher_repository(_dwg_watcher);
+                _dwg_watcher.EnableRaisingEvents = true;
             }
             catch
             {
@@ -719,11 +721,11 @@ namespace CadEye_WebVersion.ViewModels
             }
             StatusMessage = "Repository folder Monitoring  Completed";
 
-            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath);
+            var _pdf_watcher = SetWatcher.StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath);
             try
             {
-                _pdfWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
+                _pdfWatcherService.SetupWatcher_repository(_pdf_watcher);
+                _pdf_watcher.EnableRaisingEvents = true;
             }
             catch
             {
@@ -789,44 +791,6 @@ namespace CadEye_WebVersion.ViewModels
             }
             StatusMessage = "Folder Setting Completed";
 
-            // 파일 와처 셋팅
-            var _watcher = SetWatcher.StartWatcher(ref _watcher_repository_project!, path);
-            try
-            {
-                _projectFolderWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
-            }
-            catch
-            {
-                StatusMessage = "ProjectFolder Monitoring Failure";
-                return;
-            }
-            StatusMessage = "ProjectFolder Monitoring Completed";
-
-            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_dwg!, repositoryDwgPath);
-            try
-            {
-                _dwgWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
-            }
-            catch
-            {
-                StatusMessage = "Repository folder Monitoring  Failure";
-                return;
-            }
-            StatusMessage = "Repository folder Monitoring  Completed";
-
-            _watcher = SetWatcher.StartWatcher(ref _watcher_repository_pdf!, repositoryPdfPath);
-            try
-            {
-                _pdfWatcherService.SetupWatcher_repository(_watcher);
-                _watcher.EnableRaisingEvents = true;
-            }
-            catch
-            {
-                StatusMessage = "Repository Pdf Folder Monitoring Failure";
-                return;
-            }
             StatusMessage = "Repository Pdf Folder Monitoring Completed";
         }
         #endregion

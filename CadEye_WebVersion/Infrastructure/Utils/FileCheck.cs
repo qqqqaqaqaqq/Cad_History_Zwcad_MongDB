@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace CadEye_WebVersion.Infrastructure.Utils
@@ -32,14 +33,7 @@ namespace CadEye_WebVersion.Infrastructure.Utils
 
                         var hash = await FileHashProvider.Hash_Allocated_Unique(file.FullName);
 
-                        var sourceNode = new ChildFile
-                        {
-                            File_FullName = file.FullName,
-                            File_Name = file.Name,
-                            File_Directory = Path.GetDirectoryName(file.FullName) ?? "",
-                            AccesTime = file.LastAccessTime,
-                            HashToken = hash
-                        };
+                        var sourceNode = await FileInformation(file.FullName);
 
                         item_insert.Add(sourceNode);
                     }
@@ -57,6 +51,23 @@ namespace CadEye_WebVersion.Infrastructure.Utils
                 Debug.WriteLine(ex.Message);
                 return new ConcurrentBag<ChildFile>();
             }
+        }
+
+        public static async Task<ChildFile> FileInformation(string file)
+        {
+            var fileinfo = new FileInfo(file);
+            var hash = await FileHashProvider.Hash_Allocated_Unique(fileinfo.FullName);
+
+            var sourceNode = new ChildFile
+            {
+                File_FullName = fileinfo.FullName,
+                File_Name = fileinfo.Name,
+                File_Directory = Path.GetDirectoryName(fileinfo.FullName) ?? "",
+                AccesTime = fileinfo.LastAccessTime,
+                HashToken = hash
+            };
+
+            return sourceNode;
         }
     }
 }

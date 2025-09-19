@@ -3,14 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:h="clr-namespace:CadEye_WebVersion.Commands.Helper"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="400">
-
-    <UserControl.Resources>
-        <h:LoginParameterConverter x:Key="LoginParameter"/>
-    </UserControl.Resources>
-
     <Grid>
         <Border
             Width="250"
