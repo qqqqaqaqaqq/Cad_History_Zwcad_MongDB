@@ -37,7 +37,7 @@
                     <TextBlock Text="ID:" Width="120" 
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                                FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding id}" 
+                    <TextBlock Text="{Binding Admin.Googleid}" 
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
 
@@ -45,21 +45,21 @@
                     <TextBlock Text="Email:" Width="120"
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                                FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding Email}" 
+                    <TextBlock Text="{Binding Admin.Email}" 
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Role:" Width="120" FontWeight="SemiBold"     
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBlock Text="{Binding Role}"  
+                    <TextBlock Text="{Binding Admin.Role}"  
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Theme:" Width="120" FontWeight="SemiBold"   
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <CheckBox IsChecked="{Binding Theme}"
+                    <CheckBox IsChecked="{Binding Admin.Theme, Mode=TwoWay}"
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                               Content="Dark Mode"/>
                 </StackPanel>
@@ -67,7 +67,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="CAD Threads:" Width="120" FontWeight="SemiBold"    
                                Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Text="{Binding CADThread}" Width="60" Padding="3" 
+                    <TextBox Text="{Binding Admin.CADThread}" Width="60" Padding="3" 
                              Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                              BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
                              BorderThickness="1" 
@@ -77,7 +77,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="PDF Threads:" Width="120" FontWeight="SemiBold"
                                 Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBox Text="{Binding PDFThread}" Width="60" Padding="3"
+                    <TextBox Text="{Binding Admin.PDFThread}" Width="60" Padding="3"
                              Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                              BorderBrush="{Binding DataContext.GlobalBorderBrush, RelativeSource={RelativeSource AncestorType=Window}}"
                              BorderThickness="1" 
@@ -87,28 +87,34 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Created At:" Width="120" FontWeight="SemiBold"
                                 Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBlock Text="{Binding CreatedAt}"  Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    <TextBlock Text="{Binding Admin.CreatedAt}"  Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Last Login:" Width="120" FontWeight="SemiBold"
                                 Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <TextBlock Text="{Binding LastLogin}"
+                    <TextBlock Text="{Binding Admin.LastLogin}"
                                 Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
                 <Border CornerRadius="12" 
                     Background="#4A90E2"
                     Padding="2"
                     Margin="10"
+                        Width="250"
+                        Height="50"
                     Effect="{DynamicResource DropShadow}">
-                    <Button Width="100" Height="50"
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
                             Background="Transparent"
                             BorderThickness="0"
                             Foreground="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"
                             FontWeight="Bold"
                             FontSize="14"
                             Cursor="Hand"
-                            Content="Save">
+                            Content="Save"
+                            Command="{Binding AdminSavebtn.AdminSaveCommand}"
+                            CommandParameter="{Binding Admin}">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Foreground" Value="{Binding DataContext.GlobalForeground, RelativeSource={RelativeSource AncestorType=Window}}"/>

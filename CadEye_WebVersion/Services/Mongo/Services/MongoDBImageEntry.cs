@@ -39,8 +39,12 @@ namespace CadEye_WebVersion.Services.Mongo.Services
             await _collection.ReplaceOneAsync(filter, file, options);
         }
 
-        public async Task<ImageEntry> FindAsync(ObjectId id) =>
-            await _collection.Find(f => f.Id == id).FirstOrDefaultAsync();
+        public async Task<ImageEntry> FindAsync(ObjectId id)
+        {
+            var node = await _collection.Find(f => f.Id == id).FirstOrDefaultAsync();
+            if (node == null) return null;
+            else return node;
+        }
 
         public async Task<List<ImageEntry>> FindAllAsync() =>
             await _collection.Find(_ => true).ToListAsync();

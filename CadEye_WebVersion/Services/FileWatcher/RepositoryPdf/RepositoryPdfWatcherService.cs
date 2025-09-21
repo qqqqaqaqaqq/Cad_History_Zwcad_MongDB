@@ -34,7 +34,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.RepositoryPdf
             eventQueue_repository.Enqueue(e);
         }
 
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.PDFTasks - 2);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.PDFTasks);
         public async Task Brdige_Queue_repository()
         {
             while (true)

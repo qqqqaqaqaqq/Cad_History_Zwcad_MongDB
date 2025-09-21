@@ -4,19 +4,19 @@ using CadEye_WebVersion.Services.Google;
 
 namespace CadEye_WebVersion.ViewModels
 {
-    public class LoginPageViewModel
+    public class LoginWindowModel
     {
-        public CadEyeLogin LoginEvent { get; }
+        public GoogleLogin LoginEvent { get; }
         public readonly IGoogleService _googleService;
         public readonly IUserControlService _userControlService;
 
-        public LoginPageViewModel(
+        public LoginWindowModel(
             IGoogleService googleService,
             IUserControlService userControlService)
         {
             _googleService = googleService;
             _userControlService = userControlService;
-            LoginEvent = new CadEyeLogin(_googleService, _userControlService);
+            LoginEvent = new GoogleLogin(_googleService, _userControlService);
         }
     }
 }

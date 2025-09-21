@@ -24,11 +24,22 @@ namespace CadEye_WebVersion.Services.PDF
         {
             bool check = await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(path)), 100, 100);
             if (!check) { return new byte[] { }; }
-            byte[] resource = await Task.Run(() =>
+
+            using var fs = new FileStream(
+                 path,
+                 FileMode.Open,
+                 FileAccess.Read,
+                 FileShare.ReadWrite, // 다른 프로세스가 사용 중이어도 읽을 수 있게
+                 4096, // 파일크기 한도아님
+                 useAsync: true);
+
+            if (fs.Length > int.MaxValue)
             {
-                byte[] result = File.ReadAllBytes(path);
-                return result;
-            });
+                throw new IOException("파일이 너무 커서 byte[] 배열로 읽을 수 없습니다.");
+            }
+
+            var resource = new byte[fs.Length];
+            await fs.ReadAsync(resource, 0, (int)fs.Length);
             return resource;
         }
 

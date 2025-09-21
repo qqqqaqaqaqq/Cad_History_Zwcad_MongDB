@@ -277,27 +277,6 @@
                     </Border>
                 </Grid>
             </Border>
-
-            <!--  Login  -->
-            <Border
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Background="#20FFFFFF"    
-            BorderBrush="#80FFFFFF"
-                
-            BorderThickness="1"
-            Visibility="{Binding LoginWindowVisibility}">
-                <Border.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="15" Opacity="0.5"/>
-                </Border.Effect>
-                <ContentControl
-                Content="{Binding LoginHostContent}"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Center"
-                Width="400"
-                Height="600"
-                Visibility="{Binding LoginWindowVisibility}"/>
-            </Border>
         </Grid>
     </Grid>
 </Window>

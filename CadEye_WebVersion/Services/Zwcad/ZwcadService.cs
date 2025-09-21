@@ -1,6 +1,4 @@
-﻿using CadEye_WebVersion.Infrastructure.Utils;
-using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
-using CadEye_WebVersion.Views;
+﻿using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -27,15 +25,11 @@ namespace CadEye_WebVersion.Services.Zwcad
         {
             try
             {
-                for (int i = 0; i < AppSettings.ZwcadThreads - 2; i++)
+                for (int i = 0; i < AppSettings.ZwcadThreads; i++)
                 {
-                    WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
-
                     ZcadApplication _zwcad = new ZcadApplication();
                     _zwcad.Visible = false;
                     Zwcads.Add(_zwcad, false);
-
-                    WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad_{i} Instance Created"));
                 }
             }
             catch (Exception ex)
@@ -118,7 +112,7 @@ namespace CadEye_WebVersion.Services.Zwcad
                         lock (_lock)
                         {
                             Zwcads[assigned] = false;
-                            Debug.WriteLine("해제");
+                            Debug.WriteLine("해제 성공");
                         }
                     }
                 });
@@ -249,7 +243,6 @@ namespace CadEye_WebVersion.Services.Zwcad
                     }
                 }
 
-                Debug.WriteLine($"plot {device}");
                 modelLayout.ConfigName = device;
                 modelLayout.RefreshPlotDeviceInfo();
                 modelLayout.CanonicalMediaName = "A1";

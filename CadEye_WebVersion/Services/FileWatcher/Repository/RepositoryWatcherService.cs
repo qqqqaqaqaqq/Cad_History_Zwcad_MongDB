@@ -41,7 +41,8 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
             eventQueue_repository.Enqueue(e);
         }
 
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.ZwcadThreads - 2);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(AppSettings.ZwcadThreads);
+
         public async Task Brdige_Queue_repository()
         {
             while (true)
@@ -54,8 +55,6 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
                     {
                         try
                         {
-                            Debug.WriteLine($"처리 시작: {e.ChangeType}");
-
                             switch (e.ChangeType)
                             {
                                 case WatcherChangeTypes.Created:
@@ -69,13 +68,12 @@ namespace CadEye_WebVersion.Services.FileWatcher.Repository
                         }
                         finally
                         {
-                            _semaphore.Release(); // 반드시 슬롯 반환
+                            _semaphore.Release();
                         }
                     });
                 }
                 else
                 {
-                    // 큐가 비어있으면 잠깐 대기
                     await Task.Delay(100);
                 }
             }

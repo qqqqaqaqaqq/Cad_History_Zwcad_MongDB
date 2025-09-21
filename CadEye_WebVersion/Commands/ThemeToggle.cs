@@ -1,6 +1,7 @@
 ﻿using CadEye_WebVersion.ViewModels.Messages.ThemeBrush;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using System.Diagnostics;
 using System.Windows.Media;
 
 namespace CadEye_WebVersion.Commands
@@ -19,18 +20,9 @@ namespace CadEye_WebVersion.Commands
         {
             System.Windows.Media.Brush globalColor, theme, viewContainBackground, globalBorderBrush;
             if (parameter == null) { return; }
-            string? mode = parameter as string;
-            bool tooggle = false;
-            if (mode == "DarkMode")
-            {
-                tooggle = true;
-            }
-            else if (mode == "WhiteMode")
-            {
-                tooggle = false;
-            }
+            bool? mode = parameter as bool?;
 
-            if (tooggle)
+            if (mode == true)
             {
                 globalColor = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF2E2E2E"));
                 theme = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFFFFFFF"));

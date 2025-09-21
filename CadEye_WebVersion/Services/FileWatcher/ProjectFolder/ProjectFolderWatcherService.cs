@@ -37,6 +37,7 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
             _watcher.OnDeleted += (s, e) => _subject.OnNext(e);
             _watcher.OnRenamed += (s, e) => _subject.OnNext(e);
 
+            _watcher.IncludeSubdirectories = true;
             _watcher.Start();
         }
 
@@ -54,63 +55,60 @@ namespace CadEye_WebVersion.Services.FileWatcher.ProjectFolder
                     var original_node = new ChildFile();
                     string Description = string.Empty;
 
-                    if (await RetryProvider.RetryAsync(() => Task.FromResult(File.Exists(e.FullPath)), 100, 100))
-                    {
-                        var fileinfo = new FileInfo(e.FullPath);
-                        var hash = await FileHashProvider.Hash_Allocated_Unique(e.FullPath);
-                        switch (Event)
-                        {
-                            case ChangeType.CREATED:
-                                source_node.File_FullName = e.FullPath;
-                                source_node.File_Name = Path.GetFileName(e.FullPath);
-                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
-                                source_node.HashToken = hash;
-                                await _childFileService.AddOrUpdateAsync(source_node);
-                                break;
-                            case ChangeType.CHANGED:
-                                original_node = await _childFileService.NameFindAsync(e.FullPath);
-                                source_node.Id = original_node.Id;
-                                source_node.File_FullName = e.FullPath;
-                                source_node.File_Name = Path.GetFileName(e.FullPath);
-                                source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
-                                source_node.HashToken = hash;
-                                await _childFileService.AddOrUpdateAsync(source_node);
-                                break;
-                            case ChangeType.RENAMED:
-                                var re = e;
-                                if (string.IsNullOrEmpty(re.OldFullPath)) break;
-                                original_node = await _childFileService.NameFindAsync(re.OldFullPath);
-                                if (original_node == null) break;
-                                source_node.Id = original_node.Id;
-                                source_node.File_FullName = re.FullPath;
-                                source_node.File_Name = Path.GetFileName(re.FullPath);
-                                source_node.File_Directory = Path.GetDirectoryName(re.FullPath) ?? "";
-                                source_node.HashToken = hash;
-                                Description = $"Renamed from {Path.GetFileName(re.OldFullPath)} to {source_node.File_Name}";
-                                await _childFileService.AddOrUpdateAsync(source_node);
-                                break;
-                            case ChangeType.DELETED:
-                                continue;
-                        }
+                    FileInfo fileinfo;
+                    var hash = new byte[] { };
 
-                        var chknode = await _childFileService.NameFindAsync(e.FullPath);
-                        target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_{Description}.dwg";
-                        target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
-                        await RetryProvider.RetryAsync(() => FileCopyProvider.FileCopy(e.FullPath, target), 10, 200);
-                    }
-                    else
+                    if (e.ChangeType != ChangeType.DELETED)
                     {
-                        var chknode = await _childFileService.NameFindAsync(e.FullPath);
-                        target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_.dwg";
-                        target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
-                        await RetryProvider.RetryAsync(() =>
-                        {
-                            using var fs = File.Create(target);
-                            return Task.FromResult(true);
-                        }
-                        , 10
-                        , 200);
+                        fileinfo = new FileInfo(e.FullPath);
+                        hash = await FileHashProvider.Hash_Allocated_Unique(e.FullPath);
                     }
+                    switch (Event)
+                    {
+                        case ChangeType.CREATED:
+                            source_node.File_FullName = e.FullPath;
+                            source_node.File_Name = Path.GetFileName(e.FullPath);
+                            source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                            source_node.HashToken = hash;
+                            await _childFileService.AddAsync(source_node);
+                            break;
+                        case ChangeType.CHANGED:
+                            original_node = await _childFileService.NameFindAsync(e.FullPath);
+                            source_node.Id = original_node.Id;
+                            source_node.File_FullName = e.FullPath;
+                            source_node.File_Name = Path.GetFileName(e.FullPath);
+                            source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                            source_node.HashToken = hash;
+                            await _childFileService.AddOrUpdateAsync(source_node);
+                            break;
+                        case ChangeType.RENAMED:
+                            var re = e;
+                            if (string.IsNullOrEmpty(re.OldFullPath)) break;
+                            original_node = await _childFileService.NameFindAsync(re.OldFullPath);
+                            if (original_node == null) break;
+                            source_node.Id = original_node.Id;
+                            source_node.File_FullName = re.FullPath;
+                            source_node.File_Name = Path.GetFileName(re.FullPath);
+                            source_node.File_Directory = Path.GetDirectoryName(re.FullPath) ?? "";
+                            source_node.HashToken = hash;
+                            Description = $"Renamed from {Path.GetFileName(re.OldFullPath)} to {source_node.File_Name}";
+                            await _childFileService.AddOrUpdateAsync(source_node);
+                            break;
+                        case ChangeType.DELETED:
+                            original_node = await _childFileService.NameFindAsync(e.FullPath);
+                            if (original_node == null) break;
+                            source_node.Id = original_node.Id;
+                            source_node.File_FullName = e.FullPath;
+                            source_node.File_Name = Path.GetFileName(e.FullPath);
+                            source_node.File_Directory = Path.GetDirectoryName(e.FullPath) ?? "";
+                            await _childFileService.AddOrUpdateAsync(source_node);
+                            continue;
+                    }
+
+                    var chknode = await _childFileService.NameFindAsync(e.FullPath);
+                    target = $"{chknode.Id}_{Event.ToString()}_{DateTime.Now:yyyyMMdd-HHmmss}_{Description}.dwg";
+                    target = System.IO.Path.Combine(AppSettings.RepositoryDwgFolder!, target);
+                    await RetryProvider.RetryAsync(() => FileCopyProvider.FileCopy(e.FullPath, target), 10, 200);
                 }
                 else
                 {

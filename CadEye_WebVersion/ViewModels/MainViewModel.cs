@@ -13,6 +13,7 @@ using CadEye_WebVersion.ViewModels.Messages.ThemeBrush;
 using CadEye_WebVersion.Views;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using FileWatcherEx;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using System.Collections.ObjectModel;
@@ -22,7 +23,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
-using FileWatcherEx;
+
 
 namespace CadEye_WebVersion.ViewModels
 {
@@ -60,6 +61,28 @@ namespace CadEye_WebVersion.ViewModels
             _projectPath = projectPath;
             #endregion
 
+            #region LoginModel
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (LoginSession.Email != null)
+                {
+                    UserName = LoginSession.Email;
+                }
+
+                if (LoginSession.Databases != null)
+                {
+                    UserDataBase = new ObservableCollection<string>(LoginSession.Databases);
+                    StatusMessage = "Connect Success";
+                }
+
+                if (LoginSession.GoogleId != null)
+                {
+                    GoogleId = LoginSession.GoogleId;
+                    StatusMessage = "Connect Success";
+                }
+            });
+            #endregion
+
             #region Message
             WeakReferenceMessenger.Default.Register<SendStatusMessage>(this, async (r, m) =>
             {
@@ -69,6 +92,7 @@ namespace CadEye_WebVersion.ViewModels
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
+                    FileList.Clear();
                     FileList = new ObservableCollection<FileTreeNode> { m.Value };
                 });
             });
@@ -100,27 +124,14 @@ namespace CadEye_WebVersion.ViewModels
                     GlobalForeground = m.Value;
                 });
             });
-            WeakReferenceMessenger.Default.Register<SendUserName>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<SendPageName>(this, async (r, m) =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    if (!string.IsNullOrEmpty(m.Value))
-                    {
-                        LoginWindowVisibility = Visibility.Collapsed;
-                        StatusMessage = "Login Success";
-                        UserName = $"{m.Value}님! 반갑습니다.";
-                    }
-                });
-            });
-            WeakReferenceMessenger.Default.Register<SendGoogleId>(this, (r, m) =>
-            {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    if (!string.IsNullOrEmpty(m.Value))
-                    {
-                        GoogleId = m.Value;
-                        StatusMessage = "Connect Success";
-                    }
+                    var homeView = NaviTapHosts.FirstOrDefault(x => x.id == pagenumber);
+                    if (homeView == null)
+                        return;
+                    homeView.PageName = m.Value;
                 });
             });
             WeakReferenceMessenger.Default.Register<SendUsersDatabase>(this, (r, m) =>
@@ -132,16 +143,6 @@ namespace CadEye_WebVersion.ViewModels
                         UserDataBase = new ObservableCollection<string>(m.Value);
                         StatusMessage = "Connect Success";
                     }
-                });
-            });
-            WeakReferenceMessenger.Default.Register<SendPageName>(this, async (r, m) =>
-            {
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    var homeView = NaviTapHosts.FirstOrDefault(x => x.id == pagenumber);
-                    if (homeView == null)
-                        return;
-                    homeView.PageName = m.Value;
                 });
             });
             #endregion
@@ -180,24 +181,6 @@ namespace CadEye_WebVersion.ViewModels
         public iFolderService FolderService => _folderService;
         #endregion
 
-        #region LoginWindow
-        private Visibility _loginWindowVisibility = Visibility.Visible;
-        public Visibility LoginWindowVisibility
-        {
-            get => _loginWindowVisibility;
-            set
-            {
-                _loginWindowVisibility = value;
-                OnPropertyChanged();
-            }
-        }
-        public object _loginHostContent = App.ServiceProvider!.GetRequiredService<LoginPageView>();
-        public object LoginHostContent
-        {
-            get => _loginHostContent;
-            set { _loginHostContent = value; OnPropertyChanged(); }
-        }
-        #endregion
 
         #region FirstPage
         private string _username = "Guest";
@@ -740,7 +723,7 @@ namespace CadEye_WebVersion.ViewModels
             {
                 var task = filtered.Select(async file =>
                 {
-                    string target = System.IO.Path.Combine(repositoryDwgPath, $"{file.Id}_Created_{DateTime.Now:yyyyMMdd-HHmmss}_Start.dwg");
+                    string target = System.IO.Path.Combine(repositoryDwgPath, $"{file.Id}_CREATED_{DateTime.Now:yyyyMMdd-HHmmss}_Start.dwg");
                     bool retrysuccess = await RetryProvider.RetryAsync(() => FileCopyProvider.FileCopy(file.File_FullName, target), 10, 200);
 
                     if (!retrysuccess)

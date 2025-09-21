@@ -10,15 +10,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\LoginPageView.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\web_dark_sq_SI%401x.png" />
     <None Remove="Assets\web_light_rd_SI%402x.png" />
     <None Remove="Assets\web_light_rd_SU%402x.png" />
+    <None Remove="Assets\web_light_sq_SI%401x.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="Views\LoginPageView.xaml" />
   </ItemGroup>
 
   <ItemGroup>
     <COMReference Include="ZWCAD">
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
-      <Guid>2f671c11-669f-11e7-91b7-bc5ff42ac839</Guid>
+      <Guid>2f671c10-669f-11e7-91b7-bc5ff42ac839</Guid>
       <Lcid>0</Lcid>
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>false</Isolated>
@@ -27,7 +37,7 @@
     <COMReference Include="ZXAUTOLib">
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
-      <Guid>2f671ca1-669f-11e7-91b7-bc5ff42ac839</Guid>
+      <Guid>2f671ca0-669f-11e7-91b7-bc5ff42ac839</Guid>
       <Lcid>0</Lcid>
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>false</Isolated>
@@ -52,10 +62,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\web_dark_sq_SI@1x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Assets\web_light_rd_SI@2x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\web_light_rd_SU@2x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\web_light_sq_SI@1x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

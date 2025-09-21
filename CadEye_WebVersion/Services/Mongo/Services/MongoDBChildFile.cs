@@ -33,8 +33,8 @@ namespace CadEye_WebVersion.Services.Mongo.Services
 
         public async Task AddOrUpdateAsync(ChildFile file)
         {
-            var filter = Builders<ChildFile>.Filter.Eq(x => x.Id, file.Id); 
-            var options = new ReplaceOptions { IsUpsert = true };  
+            var filter = Builders<ChildFile>.Filter.Eq(x => x.Id, file.Id);
+            var options = new ReplaceOptions { IsUpsert = true };
 
             await _collection.ReplaceOneAsync(filter, file, options);
         }
@@ -42,15 +42,23 @@ namespace CadEye_WebVersion.Services.Mongo.Services
         public async Task AddAllAsync(List<ChildFile> files) =>
             await _collection.InsertManyAsync(files);
 
-        public async Task<ChildFile> FindAsync(ObjectId id) =>
-            await _collection.Find(f => f.Id == id).FirstOrDefaultAsync();
+        public async Task<ChildFile> FindAsync(ObjectId id)
+        {
+            var node = await _collection.Find(f => f.Id == id).FirstOrDefaultAsync();
+            if (node == null) return null;
+            else return node;
+        }
 
-        public async Task<ChildFile> NameFindAsync(string path) =>
-            await _collection.Find(f => f.File_FullName == path).FirstOrDefaultAsync();
+        public async Task<ChildFile> NameFindAsync(string path)
+        {
+            var node =await _collection.Find(f => f.File_FullName == path).FirstOrDefaultAsync();
+            if (node == null) return null;
+            else return node;
+        }
 
         public async Task<List<ChildFile>> FindAllAsync() =>
             await _collection.Find(_ => true).ToListAsync();
-            
+
 
         public async Task UpdateAsync(ObjectId id, string newFeaturePath)
         {
