@@ -6,10 +6,12 @@ using CadEye_WebVersion.Services.WindowService;
 using CadEye_WebVersion.ViewModels.Messages;
 using CommunityToolkit.Mvvm.Messaging;
 using MongoDB.Bson;
+using PdfiumViewer;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms.Integration;
+using static PdfSharp.Pdf.PdfDictionary;
 
 namespace CadEye_WebVersion.ViewModels
 {
@@ -20,8 +22,8 @@ namespace CadEye_WebVersion.ViewModels
         private ObservableCollection<string> _refs = new ObservableCollection<string>();
         public CellEditEnding CellEdit { get; }
         public EventList? _selectedEventEntry;
-        private WindowsFormsHost? _host;
-        private WindowsFormsHost? _historyhost;
+        private WindowsFormsHost _host = new WindowsFormsHost();
+        private WindowsFormsHost _historyhost = new WindowsFormsHost();
         private IEventEntryService _eventEntryService;
         private IImageEntryService _imageEntryService;
         private IRefEntryService _refEntryService;
@@ -79,7 +81,7 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        public WindowsFormsHost? Host
+        public WindowsFormsHost Host
         {
             get => _host;
             set
@@ -89,7 +91,7 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
 
-        public WindowsFormsHost? HistoryHost
+        public WindowsFormsHost HistoryHost
         {
             get => _historyhost;
             set
@@ -126,7 +128,7 @@ namespace CadEye_WebVersion.ViewModels
             }
         }
         #endregion
-        
+
         public InformationViewModel(
             IEventEntryService eventEntryService,
             IImageEntryService imageEntryService,
@@ -184,11 +186,11 @@ namespace CadEye_WebVersion.ViewModels
             // PDF를 ICommand -> NewWWinodwHost에 전달
             ComparePdfByte = pdfbyte;
 
-            WindowsFormsHost host = _pdfService.Host_Created(pdfbyte);
+            host = _pdfService.Host_Created(pdfbyte);
 
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                HistoryHost = null;
+                HistoryHost.Dispose();
                 if (host != null)
                 {
                     HistoryHost = host;
@@ -207,6 +209,7 @@ namespace CadEye_WebVersion.ViewModels
                 });
         }
 
+        public WindowsFormsHost host = new WindowsFormsHost();
         public async Task SelectItemEvent(ObjectId id)
         {
             if (id == ObjectId.Empty) return;
@@ -239,12 +242,12 @@ namespace CadEye_WebVersion.ViewModels
             // PDF를 ICommand -> NewWWinodwHost에 전달
             PdfByte = pdfbyte;
 
-            WindowsFormsHost host = _pdfService.Host_Created(pdfbyte);
+            host = _pdfService.Host_Created(pdfbyte);
 
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                Host = null;
-                HistoryHost = null;
+                Host.Dispose();
+                HistoryHost.Dispose();
                 if (host != null)
                 {
                     Host = host;

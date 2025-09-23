@@ -181,6 +181,94 @@ namespace CadEye_WebVersion.ViewModels
         public iFolderService FolderService => _folderService;
         #endregion
 
+        #region Search
+        private string _placeholderfile = "File Name";
+        public string Placeholderfile
+        {
+            get => _placeholderfile;
+            set
+            {
+                _placeholderfile = value;
+                OnPropertyChanged();
+            }
+        }
+        private string _placeholderref = "File Name";
+        public string Placeholderref
+        {
+            get => _placeholderref;
+            set
+            {
+                _placeholderref = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _searchfile;
+        public string Searchfile
+        {
+            get => _searchfile;
+            set
+            {
+                _searchfile = value;
+                OnPropertyChanged();
+                if (string.IsNullOrEmpty(Searchfile))
+                {
+                    Placeholderfile = "File Name";
+                }
+                else
+                {
+                    Placeholderfile = "";
+                    OnSearchEvent();
+                }
+            }
+        }
+
+        public async void OnSearchEvent()
+        {
+            var totalnode = await _childFileService.FindAllAsync();
+            var filter = totalnode.FindAll(x => x.File_Name.Contains(Searchfile));
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                SearchFileList.Clear();
+                foreach (var item in filter)
+                {
+                    SearchFileList.Add(item);
+                }
+            });
+        }
+
+        private ObservableCollection<ChildFile> _filelist = new ObservableCollection<ChildFile>();
+        public ObservableCollection<ChildFile> SearchFileList
+        {
+            get => _filelist;
+            set
+            {
+                _filelist = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private ChildFile _selectedfile;
+        public ChildFile SelectedFile
+        {
+            get => _selectedfile;
+            set
+            {
+                _selectedfile = value;
+                OnPropertyChanged(nameof(SelectedFile));
+                {
+                    if (_selectedfile != null)
+                    {
+                        var clickedId = _selectedfile.Id;
+
+                        if (_selectedfile != null)
+                            WeakReferenceMessenger.Default.Send(new SendObjectId(_selectedfile.Id));
+                    }
+                }
+            }
+        }
+        #endregion
 
         #region FirstPage
         private string _username = "Guest";
@@ -478,7 +566,7 @@ namespace CadEye_WebVersion.ViewModels
             var client = new MongoClient(settings);
             var dbnamelist = client.ListDatabaseNames().ToList();
 
-            var dbfiltered = dbnamelist.Find(x => x.Equals($"{GoogleId}_&_{projectname}"));
+            var dbfiltered = dbnamelist.Find(x => x.Equals($"{projectname}"));
 
             if (dbfiltered == null) return;
             string dbName = dbfiltered.Trim().Replace(" ", "_").Replace(".", "_");
@@ -496,13 +584,15 @@ namespace CadEye_WebVersion.ViewModels
             var allFiles = await _childFileService.FindAllAsync() ?? new List<ChildFile>();
             var node = await _projectPath.NameFindAsync(projectname);
 
-            AppSettings.ProjectPath = node.ProjectFullName;
-
             if (node == null)
             {
                 StatusMessage = "No Project Path";
                 return;
             }
+
+            AppSettings.ProjectPath = node.ProjectFullName;
+
+
             // TreeView 작성
             try
             {
@@ -591,7 +681,7 @@ namespace CadEye_WebVersion.ViewModels
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
             var client = new MongoClient(settings);
 
-            dbName = $"{AppSettings.UserGoogleId}_&_{dbName}";
+            dbName = $"{dbName}";
             if (dbName.Length > 63)
             {
                 System.Windows.MessageBox.Show("프로젝트 명이 너무 깁니다. 폴더명을 줄여주세요.", "알림");

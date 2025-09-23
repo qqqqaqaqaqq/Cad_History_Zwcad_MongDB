@@ -22,7 +22,6 @@ namespace CadEye_WebVersion.Commands
 
         public async Task OnTreeRefresh()
         {
-
             // Mongo User DB 불러오기
             var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
@@ -30,8 +29,7 @@ namespace CadEye_WebVersion.Commands
             var dbnamelist = client.ListDatabaseNames().ToList();
 
             var dbfiltered = dbnamelist
-                .Where(name => name.Contains($"{AppSettings.UserGoogleId}_&_"))
-                .Select(name => name.Replace($"{AppSettings.UserGoogleId}_&_", ""))
+                .Where(db => db.ToUpper() != "ADMIN" && db.ToUpper() != "LOCAL" && db.ToUpper() != "CONFIG" && db.ToUpper() != "CADEYE_USER")
                 .ToList();
             WeakReferenceMessenger.Default.Send(new SendUsersDatabase(dbfiltered));
 
@@ -44,6 +42,7 @@ namespace CadEye_WebVersion.Commands
                 var projectname = Path.GetFileName(path);
                 var send = BuildTree.BuildTreeFromFiles(allFiles, path, projectname);
                 WeakReferenceMessenger.Default.Send(new SendFileTreeNode(send));
+
                 WeakReferenceMessenger.Default.Send(new SendStatusMessage("TreeView Refresh Succed"));
             }
         }

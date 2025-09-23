@@ -3,8 +3,6 @@ using CadEye_WebVersion.Services.Mongo.Interfaces;
 using CadEye_WebVersion.ViewModels.Messages;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using System.Diagnostics;
-
 
 namespace CadEye_WebVersion.Commands
 {
