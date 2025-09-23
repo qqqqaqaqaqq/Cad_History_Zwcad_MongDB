@@ -1,15 +1,14 @@
-﻿using CadEye_WebVersion.ViewModels.Messages.SplashMessage;
-using CommunityToolkit.Mvvm.Messaging;
+﻿
 using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
+using Google.Apis.Util.Store;
 using System.Diagnostics;
 
 namespace CadEye_WebVersion.Services.Google
 {
     public class GoogleService : IGoogleService
     {
-        public async Task<(string, string)> GoogleLogin()
+        public async Task<(string, string, string)> GoogleLogin()
         {
             string[] scopes = { "email", "profile" };
             string clientId = AppSettings.MyGoogleId!;
@@ -25,8 +24,10 @@ namespace CadEye_WebVersion.Services.Google
                     },
                     scopes,
                     "user",
-                    CancellationToken.None
+                    CancellationToken.None,
+                        new NullDataStore()
                 );
+
 
                 if (credential.Token != null && credential.Token.RefreshToken != null)
                 {
@@ -41,12 +42,12 @@ namespace CadEye_WebVersion.Services.Google
                 }
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(credential.Token.IdToken);
-
-                return (payload.Subject, payload.Email);
+                return (payload.Subject, payload.Email, payload.Name);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return (null, null)!;
+                Debug.WriteLine(ex);
+                return (null, null, null)!;
             }
         }
     }

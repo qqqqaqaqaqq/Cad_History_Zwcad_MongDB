@@ -1,9 +1,11 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace CadEye_WebVersion.Models
 {
     public class UserEntry
     {
+        [BsonId]
         public ObjectId id { get; set; }
         public string? name { get; set; }
         public string? role { get; set; }
@@ -16,6 +18,7 @@ namespace CadEye_WebVersion.Models
             ConnectUser = new List<UserEntry>();
         }
 
+        [BsonId]
         public ObjectId id { get; set; }
         public string? Googleid { get; set; }
         public string? Email { get; set; }

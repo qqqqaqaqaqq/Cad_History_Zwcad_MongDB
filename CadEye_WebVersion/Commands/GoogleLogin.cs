@@ -8,6 +8,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Data;
 using CadEye_WebVersion.Views;
+using System.Diagnostics;
 
 namespace CadEye_WebVersion.Commands
 {
@@ -31,7 +32,7 @@ namespace CadEye_WebVersion.Commands
         {
             await Task.Run(async () =>
             {
-                (string GoogleId, string Email) = await _googleService.GoogleLogin();
+                (string GoogleId, string Email, string Name) = await _googleService.GoogleLogin();
                 if (GoogleId == null || Email == null)
                 {
                     MessageBox.Show("Login Failed, Please try again.");
@@ -56,12 +57,12 @@ namespace CadEye_WebVersion.Commands
 
                 bool theme = true;
                 string _Email = Email;
-                int CADThread = 6;
-                int PDFThread = 6;
+                int CADThread = 1;
+                int PDFThread = 1;
                 List<UserEntry> ConnectUser = new List<UserEntry>();
                 DateTime CreatedAt = DateTime.Now;
                 DateTime LastLogin = DateTime.Now;
-                string Role = "Admin";
+                string Role = "User";
                 ObjectId id = new ObjectId();
 
                 var call_node = await _userControlService.FindAsync(GoogleId);
@@ -90,7 +91,15 @@ namespace CadEye_WebVersion.Commands
                     Role = Role,
                 };
 
-                await _userControlService.AddOrUpdateAsync(admin_node);
+                
+                if (call_node! != null)
+                {
+                    await _userControlService.UpdateAsync(admin_node);
+                }
+                else
+                {
+                    await _userControlService.AddAsync(admin_node);
+                }
 
                 AppSettings.ThemeToggle = theme;
                 AppSettings.ZwcadThreads = admin_node.CADThread == 0 ? 4 : admin_node.CADThread;
@@ -100,6 +109,8 @@ namespace CadEye_WebVersion.Commands
                 LoginSession.GoogleId = GoogleId;
                 LoginSession.Email = _Email;
                 LoginSession.Databases = dbfiltered;
+                LoginSession.UserName = Name;
+                
 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {

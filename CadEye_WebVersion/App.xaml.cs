@@ -36,6 +36,33 @@ namespace CadEye_WebVersion
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            MessageBoxResult result1 = System.Windows.MessageBox.Show(
+                "ZWCAD가 모두 꺼집니다.\n저장 완료하신 후 '예' 버튼을 눌러주세요.",
+                "종료 확인",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            );
+
+            if (result1 == MessageBoxResult.Yes)
+            {
+                await MainRun();
+            }
+            else
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
+        #endregion
+
+        private async Task MainRun()
+        {
+            foreach (Process proc in Process.GetProcessesByName("ZWCAD"))
+            {
+                proc.Kill();
+                proc.WaitForExit();
+            }
+
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
             string envPath = System.IO.Path.Combine(basePath, ".env");
@@ -60,6 +87,17 @@ namespace CadEye_WebVersion
             if (result == true)
             {
 
+                var thread = new Thread(() =>
+                {
+                    splashDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+                    splashWindow = new SplashWindow();
+                    splashWindow.Show();
+                    System.Windows.Threading.Dispatcher.Run();
+                });
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.IsBackground = true;
+                thread.Start();
+
                 await Task.Run(() =>
                 {
                     ExServices(services);
@@ -72,12 +110,26 @@ namespace CadEye_WebVersion
                 this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
                 themeToggle.OnThemeToggle(AppSettings.ThemeToggle);
+
+                WeakReferenceMessenger.Default.Send(new SplashMessage($"All Completed"));
+                Thread.Sleep(1000);
+                await ShowClosed();
                 mainWindow.Show();
             }
         }
-        #endregion
 
         #region InitializeAsync
+        private async Task ShowClosed()
+        {
+            if (splashDispatcher != null && splashWindow != null)
+            {
+                await splashDispatcher.InvokeAsync(() =>
+                {
+                    splashWindow.Close();
+                    splashDispatcher.InvokeShutdown();
+                });
+            }
+        }
 
         private async Task ReadEnv()
         {
@@ -214,5 +266,6 @@ namespace CadEye_WebVersion
         public static string? Email { get; set; }
         public static string? GoogleId { get; set; }
         public static List<string>? Databases { get; set; }
+        public static string? UserName { get; set; }
     }
 }

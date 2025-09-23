@@ -2,6 +2,6 @@
 {
     public interface IGoogleService
     {
-        Task<(string, string)> GoogleLogin();
+        Task<(string, string, string)> GoogleLogin();
     }
 }

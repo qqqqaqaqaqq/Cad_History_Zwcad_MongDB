@@ -30,6 +30,9 @@ namespace CadEye_WebVersion.Services.Zwcad
                     ZcadApplication _zwcad = new ZcadApplication();
                     _zwcad.Visible = false;
                     Zwcads.Add(_zwcad, false);
+
+                    WeakReferenceMessenger.Default.Send(new SplashMessage($"Zwcad{i+1} Created"));
+                    Thread.Sleep(200);
                 }
             }
             catch (Exception ex)

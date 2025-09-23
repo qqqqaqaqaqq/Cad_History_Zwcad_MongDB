@@ -81,7 +81,7 @@ namespace CadEye_WebVersion.Commands
 
             System.Windows.Window window = _windowsService.Form_View(host);
 
-            WeakReferenceMessenger.Default.Send(new SendStatusMessage("WinodwForm Show Succed"));
+            WeakReferenceMessenger.Default.Send(new SendStatusMessage("WindowForm Show Succed"));
             OnWindowShow?.Invoke(window);
         }
     }

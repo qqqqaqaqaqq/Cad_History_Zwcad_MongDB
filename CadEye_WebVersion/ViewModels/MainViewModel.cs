@@ -62,11 +62,11 @@ namespace CadEye_WebVersion.ViewModels
             #endregion
 
             #region LoginModel
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
             {
-                if (LoginSession.Email != null)
+                if (LoginSession.UserName != null)
                 {
-                    UserName = LoginSession.Email;
+                    UserName = $"{LoginSession.UserName}님! 반갑습니다!";
                 }
 
                 if (LoginSession.Databases != null)

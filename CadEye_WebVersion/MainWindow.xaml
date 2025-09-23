@@ -263,6 +263,10 @@
                                 Grid.Row="1"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
+                                Margin="5,0,0,0"
+                                BorderBrush="{Binding GlobalBorderBrush}"
+                                BorderThickness="1,0,0,0"
+                                Background="{Binding GlobalBackgroundColor_View}"
                                 Visibility="{Binding UserNameVisibility}">
                                 <TextBlock
                                     Text="{Binding UserName}"

@@ -18,7 +18,7 @@ namespace CadEye_WebVersion.Services.Mongo.Services
             var settings = MongoClientSettings.FromConnectionString(AppSettings.ServerIP);
             settings.ServerApi = new ServerApi(ServerApiVersion.V1);
             var client = new MongoClient(settings);
-            var database = client.GetDatabase("CadEye_Admin");
+            var database = client.GetDatabase("CadEye_User");
 
             var collectionName = AppSettings.UserGoogleId;
             if (!database.ListCollectionNames().ToList().Contains(collectionName))
